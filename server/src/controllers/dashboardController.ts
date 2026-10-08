@@ -14,7 +14,7 @@ export async function getDashboardSummary(req: Request, res: Response) {
     const inProgress = await prisma.complaint.count({ where: { status: 'IN_PROGRESS' } });
     const completed = await prisma.complaint.count({ where: { status: 'COMPLETED' } });
 
-    const activeCrews = await prisma.crew.count({ where: { availabilityStatus: 'AVAILABLE' } });
+    const activeCrews = await prisma.crew.count({ where: { availability: 'AVAILABLE' } });
 
     const wards = await prisma.ward.findMany({
       include: {
