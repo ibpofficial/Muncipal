@@ -264,6 +264,219 @@
   border: 1px solid #E2E8F0 !important;
 }
 
+/* Uiverse.io by NK2552003 Card & Bar Chart System */
+.nk-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.nk-card:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.06);
+}
+
+.nk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.nk-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.nk-full-stats-btn {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1E293B;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+}
+
+.nk-full-stats-btn:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #2563EB;
+}
+
+.nk-range {
+  margin-bottom: 2px;
+}
+
+.nk-range-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.5px;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+}
+
+.nk-range-unit {
+  font-size: 20px;
+  font-weight: 300;
+  color: #94A3B8;
+  margin-left: 4px;
+}
+
+.nk-date-range {
+  font-size: 11px;
+  color: #64748B;
+  margin-bottom: 16px;
+}
+
+.nk-chart-container {
+  position: relative;
+  height: 95px;
+  margin-bottom: 16px;
+}
+
+.nk-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 100%;
+  position: relative;
+  padding: 0 6px;
+}
+
+.nk-avg-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 45%;
+  height: 1.5px;
+  background: #E2E8F0;
+  z-index: 1;
+}
+
+.nk-avg-label {
+  position: absolute;
+  top: -35%;
+  right: 0;
+  background: #0F172A;
+  color: #FFFFFF;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  z-index: 2;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+}
+
+.nk-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  z-index: 2;
+}
+
+.nk-bar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.nk-bar {
+  width: 18px;
+  background: linear-gradient(to bottom, #2563EB 0%, #60A5FA 100%);
+  border-radius: 9px;
+  position: relative;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.nk-bar-critical {
+  background: linear-gradient(to bottom, #DC2626 0%, #FCA5A5 100%);
+}
+
+.nk-bar-high {
+  background: linear-gradient(to bottom, #EA580C 0%, #FDBA74 100%);
+}
+
+.nk-bar-medium {
+  background: linear-gradient(to bottom, #D97706 0%, #FEF08A 100%);
+}
+
+.nk-bar-low {
+  background: linear-gradient(to bottom, #059669 0%, #86EFAC 100%);
+}
+
+.nk-bar:hover {
+  transform: scale(1.12);
+}
+
+.nk-dot {
+  width: 7px;
+  height: 7px;
+  background: #FFFFFF;
+  border: 1.5px solid #2563EB;
+  border-radius: 50%;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nk-dot-top {
+  top: -4px;
+}
+
+.nk-dot-bottom {
+  bottom: -4px;
+}
+
+.nk-day-label {
+  font-size: 10px;
+  color: #64748B;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+}
+
+.nk-readings {
+  border-top: 1.5px solid #F1F5F9;
+  padding-top: 10px;
+}
+
+.nk-reading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.nk-reading:last-child {
+  border-bottom: none;
+}
+
+.nk-reading-time {
+  font-size: 11px;
+  color: #64748B;
+}
+
+.nk-reading-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0F172A;
+  font-family: 'JetBrains Mono', monospace, sans-serif;
+}
+
 @keyframes pulse-subtle {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

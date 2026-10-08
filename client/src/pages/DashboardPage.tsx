@@ -237,213 +237,207 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* BOTTOM ANALYTICS & CHARTS SECTION */}
+      {/* BOTTOM ANALYTICS & CHARTS SECTION - NK2552003 UIVERSE CARD SYSTEM */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Chart 1: Complaints by Priority */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase flex items-center">
+        {/* Card 1: COMPLAINTS BY PRIORITY BAND */}
+        <div className="nk-card flex flex-col justify-between">
+          <div>
+            <div className="nk-header">
+              <span className="nk-title flex items-center">
                 <BarChart2 className="w-4 h-4 text-red-600 mr-1.5" />
-                COMPLAINTS BY PRIORITY BAND
-              </h3>
-              <p className="text-[11px] text-slate-500 font-sans mt-0.5">Automated scoring distribution (0–100)</p>
+                PRIORITY BAND
+              </span>
+              <button onClick={() => navigate('/analytics')} className="nk-full-stats-btn">
+                Full Analytics »
+              </button>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200">
-              {summary?.kpis.totalComplaints ?? 50} Total
-            </span>
+
+            <div className="nk-range flex items-baseline">
+              <span className="nk-range-value">{summary?.kpis.totalComplaints ?? 50}</span>
+              <span className="nk-range-unit">Jobs</span>
+            </div>
+            <div className="nk-date-range font-mono text-[10px] text-slate-500">
+              Jaipur Municipal Region • Prioritized Distribution
+            </div>
+
+            {/* Custom Bar Chart Container with Average Line & Top/Bottom Dots */}
+            <div className="nk-chart-container">
+              <div className="nk-avg-line" />
+              <div className="nk-avg-label">AVG 12.5</div>
+
+              <div className="nk-chart">
+                {[
+                  { band: 'CRITICAL', label: 'CRIT', count: summary?.kpis.critical ?? 3, class: 'nk-bar-critical', height: '65px' },
+                  { band: 'HIGH', label: 'HIGH', count: summary?.kpis.high ?? 16, class: 'nk-bar-high', height: '85px' },
+                  { band: 'MEDIUM', label: 'MED', count: summary?.kpis.medium ?? 23, class: 'nk-bar-medium', height: '90px' },
+                  { band: 'LOW', label: 'LOW', count: summary?.kpis.low ?? 8, class: 'nk-bar-low', height: '40px' },
+                ].map((item) => (
+                  <div key={item.band} className="nk-bar-wrapper">
+                    <div className="nk-bar-container">
+                      <div
+                        onClick={() => navigate(`/work-orders?priorityBand=${item.band}`)}
+                        className={`nk-bar ${item.class}`}
+                        style={{ height: item.height }}
+                        title={`${item.label}: ${item.count} work orders`}
+                      >
+                        <div className="nk-dot nk-dot-top" />
+                        <div className="nk-dot nk-dot-bottom" />
+                      </div>
+                    </div>
+                    <span className="nk-day-label">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Graphical Recharts & Data Bars Split */}
-          <div className="space-y-3">
-            <div className="h-36 w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={140}>
-                <BarChart data={summary?.charts.byPriority ?? [
-                  { name: 'Critical', count: 14, color: '#EF4444' },
-                  { name: 'High', count: 15, color: '#F97316' },
-                  { name: 'Medium', count: 14, color: '#EAB308' },
-                  { name: 'Low', count: 7, color: '#22C55E' },
-                ]} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <XAxis dataKey="name" stroke="#64748B" tick={{ fill: '#475569', fontSize: 10 }} />
-                  <YAxis stroke="#64748B" tick={{ fill: '#475569', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', borderRadius: '8px', color: '#0F172A', fontSize: '11px' }}
-                  />
-                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                    {(summary?.charts.byPriority ?? []).map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Detailed Data Breakdown List */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 font-mono text-xs">
-              {[
-                { band: 'CRITICAL', label: 'Critical Priority', count: summary?.kpis.critical ?? 14, color: 'bg-red-600', textColor: 'text-red-700', pct: 28 },
-                { band: 'HIGH', label: 'High Urgency', count: summary?.kpis.high ?? 15, color: 'bg-orange-500', textColor: 'text-orange-700', pct: 30 },
-                { band: 'MEDIUM', label: 'Medium Window', count: summary?.kpis.medium ?? 14, color: 'bg-amber-500', textColor: 'text-amber-700', pct: 28 },
-                { band: 'LOW', label: 'Low Routine', count: summary?.kpis.low ?? 7, color: 'bg-emerald-600', textColor: 'text-emerald-700', pct: 14 },
-              ].map((item) => (
-                <div
-                  key={item.band}
-                  onClick={() => navigate(`/work-orders?priorityBand=${item.band}`)}
-                  className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-all space-y-1 group"
-                >
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className={`font-bold ${item.textColor} flex items-center`}>
-                      <span className={`w-2 h-2 rounded-full ${item.color} mr-1.5`} />
-                      {item.label}
-                    </span>
-                    <span className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                      {item.count} jobs ({item.pct}%)
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                    <div className={`${item.color} h-1.5 rounded-full`} style={{ width: `${item.pct}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Readings Breakdown */}
+          <div className="nk-readings">
+            {[
+              { label: 'Critical Priority (0-24h Window)', val: `${summary?.kpis.critical ?? 3} jobs` },
+              { label: 'High Urgency (24-48h Window)', val: `${summary?.kpis.high ?? 16} jobs` },
+              { label: 'Medium Patch Schedule', val: `${summary?.kpis.medium ?? 23} jobs` },
+              { label: 'Low Routine Monitoring', val: `${summary?.kpis.low ?? 8} jobs` },
+            ].map((r, i) => (
+              <div key={i} className="nk-reading">
+                <span className="nk-reading-time">{r.label}</span>
+                <span className="nk-reading-value">{r.val}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Chart 2: Complaints by Ward */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase flex items-center">
+        {/* Card 2: COMPLAINTS BY MUNICIPAL WARD */}
+        <div className="nk-card flex flex-col justify-between">
+          <div>
+            <div className="nk-header">
+              <span className="nk-title flex items-center">
                 <Layers className="w-4 h-4 text-blue-700 mr-1.5" />
-                COMPLAINTS BY MUNICIPAL WARD
-              </h3>
-              <p className="text-[11px] text-slate-500 font-sans mt-0.5">Jaipur zone administrative breakdown</p>
+                MUNICIPAL WARD
+              </span>
+              <button onClick={() => navigate('/analytics')} className="nk-full-stats-btn">
+                Ward Details »
+              </button>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-blue-50 text-blue-800 rounded border border-blue-200">
-              3 Wards
-            </span>
+
+            <div className="nk-range flex items-baseline">
+              <span className="nk-range-value">3</span>
+              <span className="nk-range-unit">Wards</span>
+            </div>
+            <div className="nk-date-range font-mono text-[10px] text-slate-500">
+              Pink City • Vaishali • Malviya Nagar Sectors
+            </div>
+
+            {/* Custom Bar Chart Container */}
+            <div className="nk-chart-container">
+              <div className="nk-avg-line" />
+              <div className="nk-avg-label">AVG 16.6</div>
+
+              <div className="nk-chart">
+                {[
+                  { wardId: 'WARD-12', label: 'W-12', title: 'Pink City', count: 18, height: '90px' },
+                  { wardId: 'WARD-18', label: 'W-18', title: 'Vaishali', count: 17, height: '82px' },
+                  { wardId: 'WARD-24', label: 'W-24', title: 'Malviya', count: 15, height: '72px' },
+                ].map((item) => (
+                  <div key={item.wardId} className="nk-bar-wrapper">
+                    <div className="nk-bar-container">
+                      <div
+                        onClick={() => navigate(`/work-orders?wardId=${item.wardId}`)}
+                        className="nk-bar"
+                        style={{ height: item.height }}
+                        title={`${item.title}: ${item.count} complaints`}
+                      >
+                        <div className="nk-dot nk-dot-top" />
+                        <div className="nk-dot nk-dot-bottom" />
+                      </div>
+                    </div>
+                    <span className="nk-day-label">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="h-36 w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={140}>
-                <BarChart data={summary?.charts.byWard ?? [
-                  { wardId: 'WARD-12', wardName: 'Ward 12', fullTitle: 'Ward 12 - Pink City', count: 18 },
-                  { wardId: 'WARD-18', wardName: 'Ward 18', fullTitle: 'Ward 18 - Vaishali', count: 17 },
-                  { wardId: 'WARD-24', wardName: 'Ward 24', fullTitle: 'Ward 24 - Malviya', count: 15 },
-                ]} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <XAxis dataKey="wardName" stroke="#64748B" tick={{ fill: '#475569', fontSize: 10 }} />
-                  <YAxis stroke="#64748B" tick={{ fill: '#475569', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', borderRadius: '8px', color: '#0F172A', fontSize: '11px' }}
-                  />
-                  <Bar dataKey="count" fill="#1D4ED8" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Detailed Ward List Breakdown */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 font-mono text-xs">
-              {(summary?.charts.byWard ?? [
-                { wardId: 'WARD-12', wardName: 'Ward 12', fullTitle: 'Ward 12 - Pink City & Heritage Corridor', count: 18 },
-                { wardId: 'WARD-18', wardName: 'Ward 18', fullTitle: 'Ward 18 - Vaishali & Chitrakoot Zone', count: 17 },
-                { wardId: 'WARD-24', wardName: 'Ward 24', fullTitle: 'Ward 24 - Malviya Nagar & Apex Hub', count: 15 },
-              ]).map((ward) => {
-                const total = summary?.kpis.totalComplaints || 50;
-                const pct = Math.round((ward.count / total) * 100);
-                return (
-                  <div
-                    key={ward.wardId}
-                    onClick={() => navigate(`/work-orders?wardId=${ward.wardId}`)}
-                    className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-all space-y-1 group"
-                  >
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors truncate max-w-[200px]">
-                        {ward.fullTitle}
-                      </span>
-                      <span className="font-bold text-blue-900 shrink-0 ml-2">
-                        {ward.count} Reports ({pct}%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {/* Readings Breakdown */}
+          <div className="nk-readings">
+            {[
+              { label: 'Ward 12 (Pink City Corridor)', val: '18 Reports (36%)' },
+              { label: 'Ward 18 (Vaishali & Chitrakoot)', val: '17 Reports (34%)' },
+              { label: 'Ward 24 (Malviya & Apex Hub)', val: '15 Reports (30%)' },
+            ].map((r, i) => (
+              <div key={i} className="nk-reading">
+                <span className="nk-reading-time">{r.label}</span>
+                <span className="nk-reading-value">{r.val}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Chart 3: Work-Order Status */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="text-xs font-mono font-bold text-slate-900 uppercase flex items-center">
-                <CheckCircle2 className="w-4 h-4 text-emerald-700 mr-1.5" />
-                WORK ORDER OPERATION STATUS
-              </h3>
-              <p className="text-[11px] text-slate-500 font-sans mt-0.5">Live lifecycle dispatch pipeline</p>
+        {/* Card 3: WORK ORDER OPERATION STATUS */}
+        <div className="nk-card flex flex-col justify-between">
+          <div>
+            <div className="nk-header">
+              <span className="nk-title flex items-center">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 mr-1.5" />
+                OPERATION STATUS
+              </span>
+              <button onClick={() => navigate('/work-orders')} className="nk-full-stats-btn">
+                Live Status »
+              </button>
             </div>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded border border-emerald-200">
-              Active Sync
-            </span>
+
+            <div className="nk-range flex items-baseline">
+              <span className="nk-range-value">8</span>
+              <span className="nk-range-unit">Done</span>
+            </div>
+            <div className="nk-date-range font-mono text-[10px] text-slate-500">
+              Live lifecycle dispatch pipeline • Jaipur Division
+            </div>
+
+            {/* Custom Bar Chart Container */}
+            <div className="nk-chart-container">
+              <div className="nk-avg-line" />
+              <div className="nk-avg-label">SYNC 100%</div>
+
+              <div className="nk-chart">
+                {[
+                  { status: 'PENDING', label: 'PEND', count: summary?.kpis.pending ?? 28, class: 'nk-bar-medium', height: '90px' },
+                  { status: 'ASSIGNED', label: 'ASGN', count: 4, class: 'nk-bar', height: '35px' },
+                  { status: 'IN_PROGRESS', label: 'PROG', count: 3, class: 'nk-bar-high', height: '30px' },
+                  { status: 'COMPLETED', label: 'DONE', count: 8, class: 'nk-bar-low', height: '55px' },
+                ].map((item) => (
+                  <div key={item.status} className="nk-bar-wrapper">
+                    <div className="nk-bar-container">
+                      <div
+                        onClick={() => navigate(`/work-orders?status=${item.status}`)}
+                        className={`nk-bar ${item.class}`}
+                        style={{ height: item.height }}
+                        title={`${item.label}: ${item.count} work orders`}
+                      >
+                        <div className="nk-dot nk-dot-top" />
+                        <div className="nk-dot nk-dot-bottom" />
+                      </div>
+                    </div>
+                    <span className="nk-day-label">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="h-36 w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={100} minHeight={140}>
-                <PieChart>
-                  <Pie
-                    data={summary?.charts.byStatus ?? [
-                      { name: 'Pending', count: 35 },
-                      { name: 'Assigned', count: 4 },
-                      { name: 'In Progress', count: 3 },
-                      { name: 'Completed', count: 8 },
-                    ]}
-                    dataKey="count"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={55}
-                    innerRadius={28}
-                    paddingAngle={3}
-                  >
-                    {(summary?.charts.byStatus ?? []).map((entry, index) => {
-                      const colors = ['#D97706', '#2563EB', '#EA580C', '#059669'];
-                      return <Cell key={`pie-cell-${index}`} fill={colors[index % colors.length]} />;
-                    })}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#CBD5E1', borderRadius: '8px', color: '#0F172A', fontSize: '11px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Detailed Status Grid */}
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 font-mono text-xs">
-              {[
-                { status: 'PENDING', label: 'Pending Dispatch', count: summary?.kpis.pending ?? 35, color: 'bg-amber-500', textColor: 'text-amber-700' },
-                { status: 'ASSIGNED', label: 'Crew Assigned', count: 4, color: 'bg-blue-600', textColor: 'text-blue-700' },
-                { status: 'IN_PROGRESS', label: 'In Execution', count: 3, color: 'bg-orange-500', textColor: 'text-orange-700' },
-                { status: 'COMPLETED', label: 'Completed Repairs', count: 8, color: 'bg-emerald-600', textColor: 'text-emerald-700' },
-              ].map((st) => (
-                <div
-                  key={st.status}
-                  onClick={() => navigate(`/work-orders?status=${st.status}`)}
-                  className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 cursor-pointer transition-all space-y-0.5 group"
-                >
-                  <div className="flex items-center space-x-1 text-[10px] font-bold text-slate-600 truncate">
-                    <span className={`w-2 h-2 rounded-full ${st.color} shrink-0`} />
-                    <span>{st.label}</span>
-                  </div>
-                  <div className="text-base font-black text-slate-900 group-hover:text-blue-700 transition-colors">
-                    {st.count} <span className="text-[10px] text-slate-500 font-normal">units</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Readings Breakdown */}
+          <div className="nk-readings">
+            {[
+              { label: 'Pending Dispatch Queue', val: `${summary?.kpis.pending ?? 28} units` },
+              { label: 'Assigned to Crew (01 & 02)', val: '4 units' },
+              { label: 'In Field Execution', val: '3 units' },
+              { label: 'Completed & Verified', val: '8 units (16%)' },
+            ].map((r, i) => (
+              <div key={i} className="nk-reading">
+                <span className="nk-reading-time">{r.label}</span>
+                <span className="nk-reading-value">{r.val}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
