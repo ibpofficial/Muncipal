@@ -1,31 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WorkOrder } from '../types';
 import { PriorityBadge } from './PriorityBadge';
-import { MapPin, Clock, ArrowUpRight, AlertTriangle, Search, Layers, Flame } from 'lucide-react';
+import { MapPin, Clock, ArrowUpRight, Search, Layers, Flame } from 'lucide-react';
+import { fetchWorkOrders } from '../services/api';
 
 interface PriorityQueueProps {
-  workOrders: WorkOrder[];
+  workOrders?: WorkOrder[];
   selectedWorkOrderId?: string | null;
-  onSelectWorkOrder: (workOrderId: string) => void;
+  onSelectWorkOrder?: (workOrderId: string) => void;
   isLoading?: boolean;
 }
 
 export const PriorityQueue: React.FC<PriorityQueueProps> = ({
-  workOrders,
+  workOrders: initialWorkOrders,
   selectedWorkOrderId,
   onSelectWorkOrder,
-  isLoading = false,
+  isLoading: initialLoading = false,
 }) => {
+  const [internalOrders, setInternalOrders] = useState<WorkOrder[]>([]);
+  const [loading, setLoading] = useState<boolean>(initialLoading);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeBandFilter, setActiveBandFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (!initialWorkOrders) {
+      setLoading(true);
+      fetchWorkOrders()
+        .then((data) => setInternalOrders(data))
+        .catch((err) => console.error('Failed to load queue:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [initialWorkOrders]);
+
+  const workOrders = initialWorkOrders || internalOrders;
 
   const filteredOrders = workOrders.filter((wo) => {
     const matchesBand = activeBandFilter === 'ALL' || wo.priorityBand === activeBandFilter;
     const matchesSearch =
       !searchTerm.trim() ||
       wo.workOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.complaint.ward?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      wo.complaint?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      wo.complaint?.ward?.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesBand && matchesSearch;
   });
 
@@ -34,7 +49,7 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
   const mediumCount = workOrders.filter((w) => w.priorityBand === 'MEDIUM').length;
   const lowCount = workOrders.filter((w) => w.priorityBand === 'LOW').length;
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="nk-card h-full flex flex-col space-y-3">
         <div className="h-6 bg-slate-200 rounded animate-pulse w-1/3" />
@@ -87,7 +102,7 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
                 onClick={() => setActiveBandFilter(band)}
                 className={`px-2 py-0.5 rounded font-bold transition-all shrink-0 ${
                   activeBandFilter === band
-                    ? 'bg-navy-900 text-white shadow-sm'
+                    ? 'bg-slate-900 text-white shadow-sm'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -100,7 +115,7 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
         {/* Custom Bar Chart Header Summary */}
         <div className="nk-chart-container">
           <div className="nk-avg-line" />
-          <div className="nk-avg-label">SCORE AVG 68.5</div>
+          <div className="nk-avg-label">PRIORITY SCORE ENGINE</div>
 
           <div className="nk-chart">
             {[
@@ -128,7 +143,7 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
         </div>
       </div>
 
-      {/* Queue Items List (NK Readings System) */}
+      {/* Queue Items List */}
       <div className="nk-readings flex-1 overflow-y-auto pr-1">
         {filteredOrders.length === 0 ? (
           <div className="text-center py-10 text-slate-500 font-mono text-xs space-y-1">
@@ -139,14 +154,14 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
           filteredOrders.map((wo) => {
             const isSelected = selectedWorkOrderId === wo.workOrderNumber;
             const daysAgo = Math.floor(
-              (new Date().getTime() - new Date(wo.complaint.reportedAt).getTime()) /
+              (new Date().getTime() - new Date(wo.complaint?.reportedAt || Date.now()).getTime()) /
               (1000 * 60 * 60 * 24)
             );
 
             return (
               <div
                 key={wo.id}
-                onClick={() => onSelectWorkOrder(wo.workOrderNumber)}
+                onClick={() => onSelectWorkOrder && onSelectWorkOrder(wo.workOrderNumber)}
                 className={`nk-reading cursor-pointer group transition-all p-2 rounded-lg ${
                   isSelected
                     ? 'bg-blue-50 border border-blue-500 shadow-sm'
@@ -161,12 +176,12 @@ export const PriorityQueue: React.FC<PriorityQueueProps> = ({
                     <PriorityBadge band={wo.priorityBand} size="sm" />
                   </div>
                   <div className="nk-reading-time line-clamp-1 italic text-[11px]">
-                    "{wo.complaint.description}"
+                    "{wo.complaint?.description}"
                   </div>
                   <div className="flex items-center space-x-2 text-[10px] text-slate-500 font-mono">
                     <span className="flex items-center">
                       <MapPin className="w-3 h-3 text-blue-600 mr-0.5" />
-                      {wo.complaint.ward?.name.split('-')[0].trim()}
+                      {wo.complaint?.ward?.name.split('-')[0].trim() || wo.complaint?.wardId}
                     </span>
                     <span>•</span>
                     <span className="flex items-center">

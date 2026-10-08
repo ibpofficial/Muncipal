@@ -13,15 +13,95 @@ generator serverClient {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  firebaseUid String   @unique
-  name        String
-  email       String   @unique
-  role        String   @default("OFFICER") // OFFICER, SUPERVISOR, FIELD_CREW
-  crewId      String?
-  crew        Crew?    @relation(fields: [crewId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String               @id @default(uuid())
+  publicId            String               @unique
+  firebaseUid         String               @unique
+  name                String
+  email               String               @unique
+  role                String               @default("USER") // USER, PROFESSIONAL, AUTHORITY, WORKER
+  requestedRole       String?
+  accountStatus       String               @default("ACTIVE") // ACTIVE, PENDING_APPROVAL, SUSPENDED
+  emailVerified       Boolean              @default(false)
+  profileCompleted    Boolean              @default(false)
+  authProvider        String               @default("password") // password, google
+  photoUrl            String?
+  lastLoginAt         DateTime?
+  crewId              String?
+  crew                Crew?                @relation(fields: [crewId], references: [id])
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  userProfile         UserProfile?
+  professionalProfile ProfessionalProfile?
+  authorityProfile    AuthorityProfile?
+  workerProfile       WorkerProfile?
+  auditLogs           AuditLog[]
+  reportedComplaints  Complaint[]
+  authoredComments    Comment[]
+}
+
+model UserProfile {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone                   String?
+  preferredWard           String?
+  savedAddresses          String?
+  notificationPreferences String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model ProfessionalProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName       String?
+  profession         String?
+  phone              String?
+  serviceArea        String?
+  experience         String?
+  verificationStatus String   @default("PENDING")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model AuthorityProfile {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department          String?
+  designation         String?
+  employeeId          String?
+  wardOrZone          String?
+  authorizationStatus String   @default("PENDING")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model WorkerProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone              String?
+  specialization     String?
+  employeeRef        String?
+  availabilityStatus String   @default("AVAILABLE")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  publicId   String?
+  role       String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
 model Ward {
@@ -48,6 +128,8 @@ model Complaint {
   upvoteCount  Int        @default(0)
   reportedAt   DateTime   @default(now())
   status       String     @default("PENDING") // PENDING, ASSIGNED, SCHEDULED, IN_PROGRESS, COMPLETED
+  reporterId   String?
+  reporter     User?      @relation(fields: [reporterId], references: [id], onDelete: SetNull)
 
   workOrder    WorkOrder?
   comments     Comment[]
@@ -58,6 +140,8 @@ model Comment {
   complaintId String
   complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
   authorName  String    @default("Citizen")
+  authorId    String?
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
   text        String
   createdAt   DateTime  @default(now())
 }

@@ -1,111 +1,455 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { HowToUseModal } from './components/HowToUseModal';
-import LoginPage from './pages/LoginPage';
+
+// Route Guards
+import {
+  ProtectedRoute,
+  VerifiedEmailRoute,
+  RoleRoute,
+  AccountStatusGate,
+} from './components/guards/RouteGuards';
+
+// Pages
+import AuthPage from './pages/AuthPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import PublicComplaintsPage from './pages/PublicComplaintsPage';
+
+// Dashboards
+import UserDashboard from './pages/dashboards/UserDashboard';
+import ProfessionalDashboard from './pages/dashboards/ProfessionalDashboard';
+import AuthorityDashboard from './pages/dashboards/AuthorityDashboard';
+import WorkerDashboard from './pages/dashboards/WorkerDashboard';
+
+// Operational Pages
 import SocialFeedPage from './pages/SocialFeedPage';
-import { DashboardPage } from './pages/DashboardPage';
 import { DailyPlanPage } from './pages/DailyPlanPage';
 import { WorkOrdersPage } from './pages/WorkOrdersPage';
 import { ComplaintsPage } from './pages/ComplaintsPage';
 import { ReportPage } from './pages/ReportPage';
 import { CrewsPage } from './pages/CrewsPage';
-import FieldPage from './pages/FieldPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import HotspotsPage from './pages/HotspotsPage';
-import { UserRole } from './types';
+import ApprovalsPage from './pages/ApprovalsPage';
+import UsersAdminPage from './pages/UsersAdminPage';
+import AuditLogPage from './pages/AuditLogPage';
+import MyActivityPage from './pages/MyActivityPage';
+import ProfilePage from './pages/ProfilePage';
 
-function AppContent() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true); // default true for instant demo access
-  const [role, setRole] = useState<UserRole>('OFFICER');
-  const [currentUser, setCurrentUser] = useState<{ email: string; name: string; crewId?: string } | null>({
-    email: 'officer@municipal.gov',
-    name: 'MUNICIPAL OFFICER',
-  });
-  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
-
-  const navigate = useNavigate();
-
-  const handleLoginSuccess = (user: { email: string; role: UserRole; crewId?: string; name: string }) => {
-    setIsAuthenticated(true);
-    setRole(user.role);
-    setCurrentUser(user);
-  };
-
-  const handleRoleChange = (newRole: UserRole) => {
-    setRole(newRole);
-    if (newRole === 'FIELD_CREW') {
-      navigate('/field');
-    } else if (newRole === 'OFFICER' || newRole === 'SUPERVISOR') {
-      navigate('/dashboard');
-    }
-  };
-
-  if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+function DashboardRedirector() {
+  const { role, isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/public-complaints" replace />;
+  switch (role) {
+    case 'AUTHORITY':
+      return <Navigate to="/authority" replace />;
+    case 'WORKER':
+      return <Navigate to="/worker" replace />;
+    case 'PROFESSIONAL':
+      return <Navigate to="/professional" replace />;
+    case 'USER':
+    default:
+      return <Navigate to="/user" replace />;
   }
+}
+
+function MainLayout({ children }: { children: React.ReactNode }) {
+  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col font-sans selection:bg-blue-900 selection:text-white">
-      {/* Header */}
-      <Header
-        currentRole={role}
-        onRoleChange={handleRoleChange}
-        onOpenHelp={() => setIsHelpOpen(true)}
-      />
-
-      {/* Demo Banner */}
-      <div className="bg-amber-500 text-slate-950 px-4 py-1 text-center text-xs font-black tracking-wider flex items-center justify-center space-x-2 shadow-sm">
-        <span>DEMO ENVIRONMENT</span>
-        <span className="opacity-75">•</span>
-        <span className="font-semibold">MUNICIPAL ROAD OPERATIONS CONTROL CENTER</span>
-        <span className="opacity-75 hidden md:inline">•</span>
-        <button
-          onClick={() => setIsHelpOpen(true)}
-          className="underline font-extrabold hover:text-white hidden md:inline ml-2"
-        >
-          [How to Use App Guide]
-        </button>
-      </div>
+      <Header onOpenHelp={() => setIsHelpOpen(true)} />
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Hide sidebar when in field crew mobile view */}
         <Sidebar onOpenHelp={() => setIsHelpOpen(true)} />
 
         <main className="flex-1 overflow-y-auto bg-[#F8FAFC] p-4 md:p-6">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/login" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/feed" element={<SocialFeedPage />} />
-            <Route path="/daily-plan" element={<DailyPlanPage />} />
-            <Route path="/work-orders" element={<WorkOrdersPage />} />
-            <Route path="/work-orders/:id" element={<WorkOrdersPage />} />
-            <Route path="/field" element={<FieldPage />} />
-            <Route path="/field/work-orders/:id" element={<FieldPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/hotspots" element={<HotspotsPage />} />
-            <Route path="/complaints" element={<ComplaintsPage />} />
-            <Route path="/complaints/:id" element={<ComplaintsPage />} />
-            <Route path="/report" element={<ReportPage />} />
-            <Route path="/crews" element={<CrewsPage />} />
-            <Route path="/crews/:id" element={<CrewsPage />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
+          {children}
         </main>
       </div>
 
-      {/* How to Use Onboarding Guide Modal */}
       <HowToUseModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
+  );
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/login" element={<Navigate to="/auth?mode=login" replace />} />
+      <Route path="/signup" element={<Navigate to="/auth?mode=signup" replace />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+      {/* Public Complaints Feed */}
+      <Route
+        path="/public-complaints"
+        element={
+          <MainLayout>
+            <PublicComplaintsPage />
+          </MainLayout>
+        }
+      />
+
+      {/* Legacy Route Redirector */}
+      <Route path="/" element={<DashboardRedirector />} />
+      <Route path="/dashboard" element={<DashboardRedirector />} />
+      <Route path="/field" element={<Navigate to="/worker" replace />} />
+
+      {/* Authenticated Account Routes */}
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <MainLayout>
+                  <ProfilePage />
+                </MainLayout>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-activity"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <MainLayout>
+                  <MyActivityPage />
+                </MainLayout>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* USER Role Routes */}
+      <Route
+        path="/user"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['USER']}>
+                  <MainLayout>
+                    <UserDashboard />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/report"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <MainLayout>
+                  <ReportPage />
+                </MainLayout>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/my-reports"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['USER']}>
+                  <MainLayout>
+                    <UserDashboard />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* PROFESSIONAL Role Routes */}
+      <Route
+        path="/professional"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['PROFESSIONAL']}>
+                  <MainLayout>
+                    <ProfessionalDashboard />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* WORKER Role Routes */}
+      <Route
+        path="/worker"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['WORKER']}>
+                  <MainLayout>
+                    <WorkerDashboard />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* AUTHORITY Role Routes */}
+      <Route
+        path="/authority"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <AuthorityDashboard />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/feed"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <MainLayout>
+                  <SocialFeedPage />
+                </MainLayout>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/daily-plan"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <DailyPlanPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/work-orders"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <WorkOrdersPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/work-orders/:id"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <WorkOrdersPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/complaints"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <ComplaintsPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/complaints/:id"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <ComplaintsPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/crews"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <CrewsPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <AnalyticsPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/hotspots"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <HotspotsPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/approvals"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <ApprovalsPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <UsersAdminPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/audit-log"
+        element={
+          <ProtectedRoute>
+            <VerifiedEmailRoute>
+              <AccountStatusGate>
+                <RoleRoute allowedRoles={['AUTHORITY']}>
+                  <MainLayout>
+                    <AuditLogPage />
+                  </MainLayout>
+                </RoleRoute>
+              </AccountStatusGate>
+            </VerifiedEmailRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Catch-all Redirect */}
+      <Route path="*" element={<DashboardRedirector />} />
+    </Routes>
   );
 }
 
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      <AppContent />
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   );
 };

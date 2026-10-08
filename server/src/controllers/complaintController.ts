@@ -1,12 +1,49 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db/prisma';
 import { calculatePriorityDecision } from '../algorithms/priorityEngine';
+import { logAudit } from '../utils/auditLogger';
+
+export async function getPublicComplaints(req: Request, res: Response) {
+  try {
+    const complaints = await (prisma as any).complaint.findMany({
+      select: {
+        id: true,
+        ticketNumber: true,
+        description: true,
+        photoUrl: true,
+        latitude: true,
+        longitude: true,
+        wardId: true,
+        roadType: true,
+        upvoteCount: true,
+        reportedAt: true,
+        status: true,
+        ward: {
+          select: { name: true, zone: true },
+        },
+      },
+      orderBy: { reportedAt: 'desc' },
+      take: 50,
+    });
+
+    res.json({ success: true, count: complaints.length, data: complaints });
+  } catch (error) {
+    console.error('Error fetching public complaints:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch public complaint feed' });
+  }
+}
 
 export async function getComplaints(req: Request, res: Response) {
   try {
     const { wardId, priorityBand, status, search } = req.query;
+    const user = req.user;
 
     const whereClause: any = {};
+
+    // Role-based data scoping
+    if (user && user.role === 'USER') {
+      whereClause.reporterId = user.id;
+    }
 
     if (wardId && typeof wardId === 'string' && wardId !== 'ALL') {
       whereClause.wardId = wardId;
@@ -67,6 +104,11 @@ export async function getComplaintById(req: Request, res: Response) {
       return res.status(404).json({ success: false, message: 'Complaint not found' });
     }
 
+    // Role check: if USER role, must be reporter or public info
+    if (req.user && req.user.role === 'USER' && complaint.reporterId && complaint.reporterId !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Access denied to this report details' });
+    }
+
     res.json({ success: true, data: complaint });
   } catch (error) {
     console.error('Error fetching complaint by ID:', error);
@@ -78,7 +120,7 @@ export async function createComplaint(req: Request, res: Response) {
   try {
     const { description, latitude, longitude, roadType, wardId, photoUrl } = req.body;
 
-    if (!description || !latitude || !longitude || !roadType || !wardId) {
+    if (!description || latitude === undefined || longitude === undefined || !roadType || !wardId) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields: description, latitude, longitude, roadType, wardId',
@@ -113,6 +155,7 @@ export async function createComplaint(req: Request, res: Response) {
         wardId,
         roadType,
         status: 'PENDING',
+        reporterId: req.user?.id || null,
       },
       include: { ward: true },
     });
@@ -153,6 +196,16 @@ export async function createComplaint(req: Request, res: Response) {
         reasons: JSON.stringify(decision.reasons),
         recommendation: decision.recommendation,
       },
+    });
+
+    await logAudit({
+      userId: req.user?.id,
+      publicId: req.user?.publicId,
+      role: req.user?.role,
+      action: 'COMPLAINT_CREATED',
+      entityType: 'Complaint',
+      entityId: complaint.id,
+      metadata: { ticketNumber, wardId, roadType },
     });
 
     res.status(201).json({
@@ -201,7 +254,6 @@ export async function upvoteComplaint(req: Request, res: Response) {
     let updatedWorkOrder = complaint.workOrder;
 
     if (complaint.workOrder) {
-      // Calculate upvote priority boost: +2 points per upvote, capped at +20
       const currentCount = updatedComplaint.upvoteCount;
       const boost = Math.min(20, currentCount * 2);
       
@@ -220,6 +272,16 @@ export async function upvoteComplaint(req: Request, res: Response) {
       });
     }
 
+    await logAudit({
+      userId: req.user?.id,
+      publicId: req.user?.publicId,
+      role: req.user?.role,
+      action: 'UPVOTE',
+      entityType: 'Complaint',
+      entityId: complaint.id,
+      metadata: { ticketNumber: complaint.ticketNumber, newUpvoteCount: updatedComplaint.upvoteCount },
+    });
+
     res.json({
       success: true,
       message: `Upvoted complaint ${complaint.ticketNumber}! Priority boosted.`,
@@ -235,7 +297,7 @@ export async function upvoteComplaint(req: Request, res: Response) {
 export async function addComment(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { authorName, text } = req.body;
+    const { text } = req.body;
 
     if (!text || !text.trim()) {
       return res.status(400).json({ success: false, message: 'Comment text is required' });
@@ -252,9 +314,19 @@ export async function addComment(req: Request, res: Response) {
     const comment = await (prisma as any).comment.create({
       data: {
         complaintId: complaint.id,
-        authorName: authorName || 'Citizen',
+        authorName: req.user?.name || 'Citizen',
+        authorId: req.user?.id || null,
         text: text.trim(),
       },
+    });
+
+    await logAudit({
+      userId: req.user?.id,
+      publicId: req.user?.publicId,
+      role: req.user?.role,
+      action: 'COMMENT',
+      entityType: 'Complaint',
+      entityId: complaint.id,
     });
 
     res.status(201).json({
@@ -267,5 +339,3 @@ export async function addComment(req: Request, res: Response) {
     res.status(500).json({ success: false, message: 'Failed to add comment' });
   }
 }
-
-

@@ -2,16 +2,77 @@ export type PriorityBand = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type SeverityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type WorkOrderStatus = 'PENDING' | 'ASSIGNED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
 export type RoadType = 'Residential' | 'Local' | 'Collector' | 'Arterial';
-export type UserRole = 'OFFICER' | 'SUPERVISOR' | 'FIELD_CREW';
+export type UserRole = 'USER' | 'PROFESSIONAL' | 'AUTHORITY' | 'WORKER';
+export type AccountStatus = 'ACTIVE' | 'PENDING_APPROVAL' | 'SUSPENDED';
+
+export interface UserProfile {
+  phone?: string;
+  preferredWard?: string;
+  savedAddresses?: string;
+  notificationPreferences?: string;
+}
+
+export interface ProfessionalProfile {
+  businessName?: string;
+  profession?: string;
+  phone?: string;
+  serviceArea?: string;
+  experience?: string;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
+}
+
+export interface AuthorityProfile {
+  department?: string;
+  designation?: string;
+  employeeId?: string;
+  wardOrZone?: string;
+  authorizationStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
+export interface WorkerProfile {
+  phone?: string;
+  specialization?: string;
+  employeeRef?: string;
+  availabilityStatus?: 'AVAILABLE' | 'BUSY' | 'OFFLINE';
+}
 
 export interface User {
   id: string;
+  publicId: string;
   firebaseUid: string;
   name: string;
   email: string;
   role: UserRole;
+  requestedRole?: UserRole | null;
+  accountStatus: AccountStatus;
+  emailVerified: boolean;
+  profileCompleted: boolean;
+  authProvider?: 'password' | 'google';
+  photoUrl?: string | null;
   crewId?: string | null;
   crew?: Crew;
+  userProfile?: UserProfile;
+  professionalProfile?: ProfessionalProfile;
+  authorityProfile?: AuthorityProfile;
+  workerProfile?: WorkerProfile;
+  permissions?: string[];
+}
+
+export interface AuditLog {
+  id: string;
+  userId?: string;
+  publicId?: string;
+  role?: string;
+  action: string;
+  entityType?: string;
+  entityId?: string;
+  metadata?: string;
+  createdAt: string;
+  user?: {
+    name: string;
+    email: string;
+    publicId: string;
+  };
 }
 
 export interface Ward {
@@ -60,6 +121,7 @@ export interface Comment {
   id: string;
   complaintId: string;
   authorName: string;
+  authorId?: string | null;
   text: string;
   createdAt: string;
 }
@@ -76,6 +138,7 @@ export interface Complaint {
   upvoteCount?: number;
   reportedAt: string;
   status: WorkOrderStatus;
+  reporterId?: string | null;
   ward?: Ward;
   workOrder?: WorkOrder;
   comments?: Comment[];

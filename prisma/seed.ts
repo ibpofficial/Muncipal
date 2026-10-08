@@ -5,6 +5,14 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('🧹 Cleaning existing database...');
+  await prisma.roadHotspot.deleteMany({});
+  await prisma.photoEvidence.deleteMany({});
+  await prisma.auditLog.deleteMany({});
+  await prisma.userProfile.deleteMany({});
+  await prisma.professionalProfile.deleteMany({});
+  await prisma.authorityProfile.deleteMany({});
+  await prisma.workerProfile.deleteMany({});
+  await prisma.comment.deleteMany({});
   await prisma.assignmentOverride.deleteMany({});
   await prisma.assignmentDecision.deleteMany({});
   await prisma.planItem.deleteMany({});
@@ -12,6 +20,7 @@ async function main() {
   await prisma.workOrder.deleteMany({});
   await prisma.complaint.deleteMany({});
   await prisma.roadAsset.deleteMany({});
+  await prisma.user.deleteMany({});
   await prisma.crew.deleteMany({});
   await prisma.ward.deleteMany({});
 
@@ -76,6 +85,71 @@ async function main() {
 
   for (const crew of crews) {
     await prisma.crew.create({ data: crew });
+  }
+
+  console.log('🌱 Seeding Municipal Demo Users...');
+  const seedUsers = [
+    {
+      publicId: 'AUT-000001',
+      firebaseUid: 'SEED_ADMIN_UID',
+      name: 'Chief Municipal Officer',
+      email: 'officer@municipal.gov',
+      role: 'AUTHORITY',
+      accountStatus: 'ACTIVE',
+      emailVerified: true,
+      profileCompleted: true,
+      authProvider: 'password',
+    },
+    {
+      publicId: 'WRK-000001',
+      firebaseUid: 'SEED_WORKER1_UID',
+      name: 'Alpha Crew Lead',
+      email: 'worker1@municipal.gov',
+      role: 'WORKER',
+      accountStatus: 'ACTIVE',
+      emailVerified: true,
+      profileCompleted: true,
+      crewId: 'CREW-01',
+      authProvider: 'password',
+    },
+    {
+      publicId: 'WRK-000002',
+      firebaseUid: 'SEED_WORKER2_UID',
+      name: 'Beta Crew Lead',
+      email: 'worker2@municipal.gov',
+      role: 'WORKER',
+      accountStatus: 'ACTIVE',
+      emailVerified: true,
+      profileCompleted: true,
+      crewId: 'CREW-02',
+      authProvider: 'password',
+    },
+    {
+      publicId: 'CIT-000001',
+      firebaseUid: 'SEED_CITIZEN_UID',
+      name: 'Rajesh Sharma',
+      email: 'citizen@municipal.gov',
+      role: 'USER',
+      accountStatus: 'ACTIVE',
+      emailVerified: true,
+      profileCompleted: true,
+      authProvider: 'password',
+    },
+    {
+      publicId: 'PRO-000001',
+      firebaseUid: 'SEED_PRO_UID',
+      name: 'Priya Infra Engineers',
+      email: 'pro@municipal.gov',
+      role: 'PROFESSIONAL',
+      accountStatus: 'ACTIVE',
+      emailVerified: true,
+      profileCompleted: true,
+      authProvider: 'password',
+    },
+  ];
+
+  for (const userData of seedUsers) {
+    await prisma.user.create({ data: userData });
   }
 
   console.log('🌱 Seeding Jaipur Road Assets...');

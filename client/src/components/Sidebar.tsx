@@ -14,8 +14,17 @@ import {
   Share2,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
+  UserCheck,
+  Users,
+  ShieldAlert,
+  Activity,
+  User,
+  Home,
+  Briefcase,
+  MapPin,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { UserRole } from '../types';
 
 interface SidebarProps {
   onOpenHelp?: () => void;
@@ -35,80 +44,102 @@ interface NavSection {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onOpenHelp }) => {
+  const { role } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const navSections: NavSection[] = [
-    {
-      title: 'COMMAND CENTER',
-      items: [
-        {
-          path: '/dashboard',
-          label: 'Command Center',
-          icon: LayoutDashboard,
-        },
-        {
-          path: '/feed',
-          label: 'Civic Social Feed',
-          icon: Share2,
-          badge: 'UPVOTES',
-          accent: true,
-        },
-      ],
-    },
-    {
-      title: 'OPERATIONS & PLANNING',
-      items: [
-        {
-          path: '/daily-plan',
-          label: 'Daily Work Plan',
-          icon: CalendarCheck,
-          badge: 'PLANNER',
-        },
-        {
-          path: '/work-orders',
-          label: 'Priority Queue',
-          icon: ClipboardList,
-        },
-        {
-          path: '/analytics',
-          label: 'Operational Analytics',
-          icon: BarChart3,
-        },
-        {
-          path: '/hotspots',
-          label: 'Recurring Hotspots',
-          icon: Flame,
-          badge: 'HOTSPOT',
-        },
-      ],
-    },
-    {
-      title: 'FIELD CREW & DISPATCH',
-      items: [
-        {
-          path: '/field',
-          label: 'Field Crew Workspace',
-          icon: Wrench,
-          badge: 'MOBILE',
-        },
-        {
-          path: '/crews',
-          label: 'Field Crews',
-          icon: Truck,
-        },
-        {
-          path: '/complaints',
-          label: 'Citizen Complaints',
-          icon: FileText,
-        },
-        {
-          path: '/report',
-          label: 'Report Road Issue',
-          icon: PlusCircle,
-        },
-      ],
-    },
-  ];
+  const getRoleNavSections = (userRole?: UserRole | null): NavSection[] => {
+    switch (userRole) {
+      case 'USER':
+        return [
+          {
+            title: 'CITIZEN PORTAL',
+            items: [
+              { path: '/user', label: 'My Dashboard', icon: Home },
+              { path: '/my-reports', label: 'My Complaints', icon: FileText, badge: 'REPORTS' },
+              { path: '/report', label: 'Report Road Issue', icon: PlusCircle, accent: true },
+              { path: '/public-complaints', label: 'Public Issue Feed', icon: Share2 },
+            ],
+          },
+          {
+            title: 'ACCOUNT',
+            items: [
+              { path: '/my-activity', label: 'My Activity', icon: Activity },
+              { path: '/profile', label: 'My Profile', icon: User },
+            ],
+          },
+        ];
+
+      case 'PROFESSIONAL':
+        return [
+          {
+            title: 'PROFESSIONAL WORKSPACE',
+            items: [
+              { path: '/professional', label: 'Work Dashboard', icon: Briefcase },
+              { path: '/public-complaints', label: 'Public Reports', icon: Share2 },
+            ],
+          },
+          {
+            title: 'ACCOUNT & COMPLIANCE',
+            items: [
+              { path: '/my-activity', label: 'Activity History', icon: Activity },
+              { path: '/profile', label: 'Professional Profile', icon: User },
+            ],
+          },
+        ];
+
+      case 'WORKER':
+        return [
+          {
+            title: 'FIELD REPAIR WORKSPACE',
+            items: [
+              { path: '/worker', label: "Today's Field Plan", icon: Wrench, badge: 'JOBS' },
+              { path: '/worker?tab=route', label: 'Route Guidance', icon: MapPin },
+            ],
+          },
+          {
+            title: 'WORKER ACCOUNT',
+            items: [
+              { path: '/my-activity', label: 'Shift History', icon: Activity },
+              { path: '/profile', label: 'Worker Profile', icon: User },
+            ],
+          },
+        ];
+
+      case 'AUTHORITY':
+      default:
+        return [
+          {
+            title: 'COMMAND CENTER',
+            items: [
+              { path: '/authority', label: 'Operations Overview', icon: LayoutDashboard },
+              { path: '/feed', label: 'Civic Social Feed', icon: Share2, badge: 'LIVE' },
+            ],
+          },
+          {
+            title: 'OPERATIONS & PLANNING',
+            items: [
+              { path: '/daily-plan', label: 'Daily Work Plan', icon: CalendarCheck, badge: 'PLANNER' },
+              { path: '/work-orders', label: 'Priority Queue', icon: ClipboardList },
+              { path: '/analytics', label: 'Operational Analytics', icon: BarChart3 },
+              { path: '/hotspots', label: 'Recurring Hotspots', icon: Flame, badge: 'HOTSPOT' },
+              { path: '/crews', label: 'Repair Crews', icon: Truck },
+              { path: '/complaints', label: 'All Complaints', icon: FileText },
+            ],
+          },
+          {
+            title: 'ADMIN & AUDIT LOGS',
+            items: [
+              { path: '/approvals', label: 'Role Approvals', icon: UserCheck, badge: 'PENDING' },
+              { path: '/users', label: 'User & Crew Admin', icon: Users },
+              { path: '/audit-log', label: 'System Audit Log', icon: ShieldAlert },
+              { path: '/profile', label: 'Authority Profile', icon: User },
+            ],
+          },
+        ];
+    }
+  };
+
+  const navSections = getRoleNavSections(role);
 
   return (
     <aside
@@ -126,13 +157,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenHelp }) => {
       </button>
 
       <div className="p-3 space-y-4">
-        {/* MFO Logo Header (Clean without background box container) */}
+        {/* MFO Logo Header */}
         <div className={`flex items-center space-x-3 px-1 py-2 ${isCollapsed ? 'justify-center' : ''}`}>
-          <img src="/logo.svg" alt="MFO Logo" className="h-10 w-10 object-contain shrink-0" />
+          <img src="/logo.svg" alt="MFO Logo" className="h-9 w-9 object-contain shrink-0" />
           {!isCollapsed && (
             <div>
-              <div className="font-black text-sm tracking-wider text-slate-900 leading-tight">MFO CENTER</div>
-              <div className="text-[10px] text-slate-500 font-mono font-bold">ROAD OPERATIONS</div>
+              <div className="font-black text-xs tracking-wider text-slate-900 leading-tight">MUNICIPAL PORTAL</div>
+              <div className="text-[10px] text-slate-500 font-mono font-bold uppercase">{role || 'GUEST'} WORKSPACE</div>
             </div>
           )}
         </div>
@@ -167,22 +198,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenHelp }) => {
                     {({ isActive }) => (
                       <>
                         <div className="flex items-center space-x-2.5">
-                          <Icon className="w-4.5 h-4.5 shrink-0 transition-transform group-hover:scale-110" />
+                          <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
                           {!isCollapsed && (
                             <span className="transition-all group-hover:translate-x-1">{item.label}</span>
                           )}
                         </div>
 
-                        {!isCollapsed &&
-                          (item.badge ? (
-                            <span className="px-1.5 py-0.5 text-[9px] font-mono bg-blue-600 text-white rounded font-bold uppercase">
-                              {item.badge}
-                            </span>
-                          ) : (
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500 font-serif font-black">
-                              »
-                            </span>
-                          ))}
+                        {!isCollapsed && item.badge && (
+                          <span className="px-1.5 py-0.5 text-[9px] font-mono bg-blue-600 text-white rounded font-bold uppercase">
+                            {item.badge}
+                          </span>
+                        )}
                       </>
                     )}
                   </NavLink>
@@ -192,7 +218,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenHelp }) => {
           </div>
         ))}
 
-        {/* How to Use App trigger button in Sidebar */}
+        {/* How to Use App guide */}
         {onOpenHelp && (
           <button
             onClick={onOpenHelp}
@@ -202,44 +228,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ onOpenHelp }) => {
             <span>{isCollapsed ? 'GUIDE' : 'HOW TO USE APP GUIDE'}</span>
           </button>
         )}
-
-        {/* Active Wards Quick Reference */}
-        {!isCollapsed && (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5 text-xs font-mono">
-            <div className="flex items-center justify-between font-bold text-slate-800">
-              <span className="flex items-center text-[10px]">
-                <Building2 className="w-3.5 h-3.5 mr-1 text-blue-800" /> ACTIVE ZONES
-              </span>
-              <span className="text-[10px] text-slate-500">3 WARDS</span>
-            </div>
-            <div className="space-y-1 text-[10px] text-slate-600">
-              <div className="flex justify-between border-b border-slate-200 pb-0.5">
-                <span>Ward 12 (North)</span>
-                <span className="font-bold text-blue-700">18 Jobs</span>
-              </div>
-              <div className="flex justify-between border-b border-slate-200 pb-0.5">
-                <span>Ward 18 (East)</span>
-                <span className="font-bold text-blue-700">17 Jobs</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Ward 24 (South)</span>
-                <span className="font-bold text-blue-700">15 Jobs</span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Footer Info */}
       {!isCollapsed && (
         <div className="p-3 border-t border-slate-200 text-[10px] text-slate-500 space-y-0.5 bg-slate-50/50 font-mono">
           <div className="flex items-center justify-between">
-            <span>Priority Model:</span>
-            <span className="text-slate-900 font-bold">40S+25E+20T+10A+5C</span>
+            <span>Priority Algorithm:</span>
+            <span className="text-slate-900 font-bold">5-FACTOR (40/25/20/10/5)</span>
           </div>
           <div className="flex items-center justify-between">
-            <span>Community Boost:</span>
-            <span className="text-blue-700 font-bold">+2 per Upvote</span>
+            <span>Civic Upvote Boost:</span>
+            <span className="text-blue-700 font-bold">+2 pts</span>
           </div>
         </div>
       )}

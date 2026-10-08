@@ -116,7 +116,7 @@ export default function SocialFeedPage() {
 
     try {
       setIsSubmittingComment(true);
-      await addCommentApi(complaintId, text, 'Citizen');
+      await addCommentApi(complaintId, text);
       setCommentInput((prev) => ({ ...prev, [complaintId]: '' }));
       await loadData();
     } catch (err: any) {

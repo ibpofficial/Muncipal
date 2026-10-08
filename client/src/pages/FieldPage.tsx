@@ -47,7 +47,7 @@ export default function FieldPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetchFieldTodayJobs(crewId);
+      const res = await fetchFieldTodayJobs();
       setData({
         crewName: res.crew.name,
         totalJobs: res.totalJobs,

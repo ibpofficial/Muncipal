@@ -1,28 +1,44 @@
 import { Request, Response } from 'express';
 import { prisma } from '../db/prisma';
+import { logAudit } from '../utils/auditLogger';
 
 export async function getFieldTodayJobs(req: Request, res: Response) {
   try {
-    const crewIdParam = req.query.crewId as string;
-    const crewIdHeader = req.headers['x-crew-id'] as string;
-    
-    // Default to CREW-01 if unspecified
-    const crewId = crewIdParam || crewIdHeader || 'CREW-01';
+    const user = req.user;
+    let crewId = user?.crewId;
+
+    // Fallback if authority calls field endpoints for inspection
+    if (!crewId && user?.role === 'AUTHORITY') {
+      crewId = (req.query.crewId as string) || 'CREW-01';
+    }
+
+    if (!crewId) {
+      return res.json({
+        success: true,
+        data: {
+          crew: null,
+          date: new Date().toISOString().split('T')[0],
+          totalJobs: 0,
+          completedJobs: 0,
+          remainingJobs: 0,
+          nextJob: null,
+          jobs: [],
+        },
+      });
+    }
 
     const crew = await prisma.crew.findUnique({
       where: { id: crewId },
     });
 
     if (!crew) {
-      return res.status(404).json({ success: false, message: 'Crew not found' });
+      return res.status(404).json({ success: false, message: 'Assigned crew record not found' });
     }
 
     const todayStr = new Date().toISOString().split('T')[0];
 
     const planItems = await (prisma as any).planItem.findMany({
-      where: {
-        crewId,
-      },
+      where: { crewId },
       include: {
         workOrder: {
           include: {
@@ -34,11 +50,8 @@ export async function getFieldTodayJobs(req: Request, res: Response) {
       orderBy: { sequence: 'asc' },
     });
 
-    // Also fetch work orders directly assigned to crew even if not in today's daily plan item
     const assignedWorkOrders = await (prisma as any).workOrder.findMany({
-      where: {
-        assignedCrewId: crewId,
-      },
+      where: { assignedCrewId: crewId },
       include: {
         complaint: { include: { ward: true } },
         evidencePhotos: true,
@@ -76,7 +89,6 @@ export async function getFieldTodayJobs(req: Request, res: Response) {
     });
 
     const jobs = Array.from(jobsMap.values()).sort((a, b) => a.sequence - b.sequence);
-
     const completedCount = jobs.filter((j) => j.workOrder.status === 'COMPLETED').length;
     const nextJob = jobs.find((j) => j.workOrder.status !== 'COMPLETED');
 
@@ -110,6 +122,10 @@ export async function startWorkOrder(req: Request, res: Response) {
       return res.status(404).json({ success: false, message: 'Work order not found' });
     }
 
+    if (req.user?.role === 'WORKER' && workOrder.assignedCrewId !== req.user.crewId) {
+      return res.status(403).json({ success: false, message: 'You can only start jobs assigned to your crew' });
+    }
+
     if (workOrder.status === 'COMPLETED') {
       return res.status(400).json({ success: false, message: 'Work order is already completed' });
     }
@@ -132,6 +148,16 @@ export async function startWorkOrder(req: Request, res: Response) {
     await prisma.complaint.update({
       where: { id: workOrder.complaintId },
       data: { status: 'IN_PROGRESS' },
+    });
+
+    await logAudit({
+      userId: req.user?.id,
+      publicId: req.user?.publicId,
+      role: req.user?.role,
+      action: 'WORK_STARTED',
+      entityType: 'WorkOrder',
+      entityId: workOrder.id,
+      metadata: { workOrderNumber: workOrder.workOrderNumber, crewId: req.user?.crewId },
     });
 
     res.json({
@@ -157,6 +183,10 @@ export async function completeWorkOrder(req: Request, res: Response) {
 
     if (!workOrder) {
       return res.status(404).json({ success: false, message: 'Work order not found' });
+    }
+
+    if (req.user?.role === 'WORKER' && workOrder.assignedCrewId !== req.user.crewId) {
+      return res.status(403).json({ success: false, message: 'You can only complete jobs assigned to your crew' });
     }
 
     const now = new Date();
@@ -190,10 +220,20 @@ export async function completeWorkOrder(req: Request, res: Response) {
           workOrderId: workOrder.id,
           type: 'AFTER',
           url: afterPhotoUrl,
-          uploadedBy: req.headers['x-user-id'] as string || 'FIELD_CREW',
+          uploadedBy: req.user?.publicId || 'WORKER',
         },
       });
     }
+
+    await logAudit({
+      userId: req.user?.id,
+      publicId: req.user?.publicId,
+      role: req.user?.role,
+      action: 'WORK_COMPLETED',
+      entityType: 'WorkOrder',
+      entityId: workOrder.id,
+      metadata: { workOrderNumber: workOrder.workOrderNumber, actualDuration: durationMinutes },
+    });
 
     res.json({
       success: true,
@@ -223,14 +263,28 @@ export async function uploadEvidence(req: Request, res: Response) {
       return res.status(404).json({ success: false, message: 'Work order not found' });
     }
 
+    if (req.user?.role === 'WORKER' && workOrder.assignedCrewId !== req.user.crewId) {
+      return res.status(403).json({ success: false, message: 'You can only upload evidence for jobs assigned to your crew' });
+    }
+
     const evidence = await (prisma as any).photoEvidence.create({
       data: {
         workOrderId: workOrder.id,
-        type: type.toUpperCase(), // BEFORE or AFTER or COMPLAINT
+        type: type.toUpperCase(),
         url,
         storagePath: storagePath || null,
-        uploadedBy: (req.headers['x-user-id'] as string) || 'FIELD_CREW',
+        uploadedBy: req.user?.publicId || 'WORKER',
       },
+    });
+
+    await logAudit({
+      userId: req.user?.id,
+      publicId: req.user?.publicId,
+      role: req.user?.role,
+      action: 'EVIDENCE_UPLOADED',
+      entityType: 'WorkOrder',
+      entityId: workOrder.id,
+      metadata: { type: type.toUpperCase(), url },
     });
 
     res.json({
