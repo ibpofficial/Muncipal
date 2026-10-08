@@ -7,7 +7,7 @@ export async function getDailyPlan(req: Request, res: Response) {
     const todayStr = new Date().toISOString().split('T')[0];
 
     // Check if plan exists for today
-    let dailyPlan = await prisma.dailyPlan.findFirst({
+    const dailyPlan = await (prisma as any).dailyPlan.findFirst({
       where: { date: todayStr },
       include: {
         items: {
@@ -22,19 +22,17 @@ export async function getDailyPlan(req: Request, res: Response) {
       },
     });
 
-    // If no plan exists, generate one automatically
-    if (!dailyPlan || dailyPlan.items.length === 0) {
+    if (!dailyPlan || !dailyPlan.items || dailyPlan.items.length === 0) {
       return await generateAndSaveDailyPlan(req, res);
     }
 
-    // Format response
     const workOrders = await prisma.workOrder.findMany({
       include: { complaint: { include: { ward: true } } },
     });
     const crews = await prisma.crew.findMany();
 
     const planResult = generateDailyPlan(
-      workOrders.map((w) => ({
+      workOrders.map((w: any) => ({
         id: w.id,
         workOrderNumber: w.workOrderNumber,
         priorityScore: w.priorityScore,
@@ -42,21 +40,21 @@ export async function getDailyPlan(req: Request, res: Response) {
         roadType: w.complaint.roadType,
         latitude: w.complaint.latitude,
         longitude: w.complaint.longitude,
-        estimatedDuration: w.estimatedDuration,
+        estimatedDuration: w.estimatedDuration ?? 90,
         description: w.complaint.description,
         priorityBand: w.priorityBand,
         wardName: w.complaint.ward.name.split('-')[0].trim(),
       })),
-      crews.map((c) => ({
+      crews.map((c: any) => ({
         id: c.id,
         name: c.name,
         specialization: c.specialization,
         currentLatitude: c.currentLatitude,
         currentLongitude: c.currentLongitude,
-        availabilityStatus: c.availabilityStatus,
-        workingStart: c.workingStart,
-        workingEnd: c.workingEnd,
-        dailyCapacity: c.dailyCapacity,
+        availabilityStatus: c.availabilityStatus ?? c.availability ?? 'AVAILABLE',
+        workingStart: c.workingStart ?? '08:30',
+        workingEnd: c.workingEnd ?? '17:00',
+        dailyCapacity: c.dailyCapacity ?? 4,
         assignedCount: 0,
       })),
       todayStr
@@ -76,7 +74,6 @@ export async function generateAndSaveDailyPlan(req: Request, res: Response) {
   try {
     const todayStr = new Date().toISOString().split('T')[0];
 
-    // Fetch pending and assigned work orders
     const workOrders = await prisma.workOrder.findMany({
       where: {
         status: { in: ['PENDING', 'ASSIGNED', 'SCHEDULED'] },
@@ -87,7 +84,7 @@ export async function generateAndSaveDailyPlan(req: Request, res: Response) {
     const crews = await prisma.crew.findMany();
 
     const planResult = generateDailyPlan(
-      workOrders.map((w) => ({
+      workOrders.map((w: any) => ({
         id: w.id,
         workOrderNumber: w.workOrderNumber,
         priorityScore: w.priorityScore,
@@ -95,31 +92,30 @@ export async function generateAndSaveDailyPlan(req: Request, res: Response) {
         roadType: w.complaint.roadType,
         latitude: w.complaint.latitude,
         longitude: w.complaint.longitude,
-        estimatedDuration: w.estimatedDuration,
+        estimatedDuration: w.estimatedDuration ?? 90,
         description: w.complaint.description,
         priorityBand: w.priorityBand,
         wardName: w.complaint.ward.name.split('-')[0].trim(),
       })),
-      crews.map((c) => ({
+      crews.map((c: any) => ({
         id: c.id,
         name: c.name,
         specialization: c.specialization,
         currentLatitude: c.currentLatitude,
         currentLongitude: c.currentLongitude,
-        availabilityStatus: c.availabilityStatus,
-        workingStart: c.workingStart,
-        workingEnd: c.workingEnd,
-        dailyCapacity: c.dailyCapacity,
+        availabilityStatus: c.availabilityStatus ?? c.availability ?? 'AVAILABLE',
+        workingStart: c.workingStart ?? '08:30',
+        workingEnd: c.workingEnd ?? '17:00',
+        dailyCapacity: c.dailyCapacity ?? 4,
         assignedCount: 0,
       })),
       todayStr
     );
 
-    // Persist to DB
-    await prisma.planItem.deleteMany({});
-    await prisma.dailyPlan.deleteMany({ where: { date: todayStr } });
+    await (prisma as any).planItem.deleteMany({});
+    await (prisma as any).dailyPlan.deleteMany({ where: { date: todayStr } });
 
-    const createdPlan = await prisma.dailyPlan.create({
+    const createdPlan = await (prisma as any).dailyPlan.create({
       data: {
         id: `PLAN-${todayStr}`,
         date: todayStr,
@@ -129,7 +125,7 @@ export async function generateAndSaveDailyPlan(req: Request, res: Response) {
 
     for (const crewPlan of planResult.crewPlans) {
       for (const job of crewPlan.jobs) {
-        await prisma.planItem.create({
+        await (prisma as any).planItem.create({
           data: {
             id: `ITEM-${job.workOrderId}`,
             dailyPlanId: createdPlan.id,
@@ -144,18 +140,15 @@ export async function generateAndSaveDailyPlan(req: Request, res: Response) {
           },
         });
 
-        // Update WorkOrder assignedCrew & status
         await prisma.workOrder.update({
           where: { id: job.workOrderId },
           data: {
             assignedCrewId: crewPlan.crewId,
             status: 'SCHEDULED',
-            scheduledAt: new Date(),
-            sequence: job.sequence,
+            scheduledDate: new Date(),
           },
         });
 
-        // Update Complaint status
         const wo = await prisma.workOrder.findUnique({ where: { id: job.workOrderId } });
         if (wo) {
           await prisma.complaint.update({
@@ -168,7 +161,7 @@ export async function generateAndSaveDailyPlan(req: Request, res: Response) {
 
     res.json({
       success: true,
-      message: "Daily work plan generated and persistent schedule saved",
+      message: 'Daily work plan generated and persistent schedule saved',
       data: planResult,
     });
   } catch (error) {
@@ -196,9 +189,8 @@ export async function assignWorkOrderManual(req: Request, res: Response) {
 
     const previousCrewId = workOrder.assignedCrewId;
 
-    // Create AssignmentOverride audit trail record
     if (overrideReason) {
-      await prisma.assignmentOverride.create({
+      await (prisma as any).assignmentOverride.create({
         data: {
           workOrderId: workOrder.id,
           previousCrewId,
@@ -208,12 +200,10 @@ export async function assignWorkOrderManual(req: Request, res: Response) {
       });
     }
 
-    // Update work order
     const updatedWO = await prisma.workOrder.update({
       where: { id: workOrder.id },
       data: {
         assignedCrewId: crewId,
-        assignedAt: new Date(),
         status: 'ASSIGNED',
       },
       include: {
