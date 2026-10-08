@@ -5,7 +5,8 @@ export interface CrewData {
   name: string;
   currentLatitude: number;
   currentLongitude: number;
-  availability: string;
+  availabilityStatus?: string;
+  availability?: string;
   assignedCount: number;
   dailyCapacity: number;
   members?: number;

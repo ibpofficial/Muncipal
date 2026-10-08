@@ -7,6 +7,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator serverClient {
+  provider = "prisma-client-js"
+  output   = "../server/node_modules/@prisma/client"
+}
+
 model User {
   id          String   @id @default(uuid())
   firebaseUid String   @unique

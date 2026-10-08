@@ -104,7 +104,7 @@ export const WorkOrderDetailModal: React.FC<WorkOrderDetailModalProps> = ({
     : [];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex justify-end transition-opacity animate-fadeIn">
       <div className="w-full max-w-2xl bg-white border-l border-slate-200 h-full overflow-y-auto flex flex-col shadow-2xl">
         {/* Top Header Bar */}
         <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between sticky top-0 z-10">
@@ -319,7 +319,7 @@ export const WorkOrderDetailModal: React.FC<WorkOrderDetailModalProps> = ({
 
         {/* MANUAL ASSIGNMENT OVERRIDE MODAL */}
         {showAssignDialog && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white border border-slate-200 rounded-xl max-w-md w-full p-6 space-y-4 shadow-2xl">
               <h3 className="text-sm font-mono font-bold text-slate-900 uppercase">
                 MANUAL CREW REASSIGNMENT OVERRIDE

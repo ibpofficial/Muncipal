@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ currentRole = 'OFFICER', onRoleC
   }, []);
 
   return (
-    <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-40 shadow-sm">
+    <header className="bg-white border-b border-slate-200 px-4 md:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 shadow-sm">
       <div className="flex items-center space-x-3">
         {/* MFO Official Transparent Logo */}
         <img src="/logo.svg" alt="MFO Logo" className="h-10 w-10 object-contain shrink-0" />

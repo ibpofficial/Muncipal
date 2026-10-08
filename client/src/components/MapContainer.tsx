@@ -30,7 +30,7 @@ export const CommandMap: React.FC<MapContainerProps> = ({
   routeJobs = [],
   selectedWorkOrderId,
   onSelectWorkOrder,
-  center = [12.9716, 77.5946],
+  center = [26.9124, 75.7873],
   zoom = 13,
 }) => {
   const getMarkerColor = (band: string) => {
@@ -52,12 +52,12 @@ export const CommandMap: React.FC<MapContainerProps> = ({
   const routePolylineCoords: [number, number][] = routeJobs.map((j) => [j.latitude, j.longitude]);
 
   return (
-    <div className="w-full h-full relative rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+    <div className="w-full h-full relative rounded-xl border border-slate-200 overflow-hidden shadow-sm z-0">
       <LeafletMap
         center={center}
         zoom={zoom}
         scrollWheelZoom={true}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', zIndex: 1, isolation: 'isolate' }}
       >
         {/* Standard OpenStreetMap Tiles (No API key required) */}
         <TileLayer

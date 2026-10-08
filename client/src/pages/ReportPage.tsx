@@ -12,10 +12,10 @@ import {
 } from 'lucide-react';
 
 const DEMO_LOCATION_PRESETS = [
-  { name: 'Ward 12 - Near St. Xavier School (School Zone)', lat: 12.9732, lng: 77.5942, wardId: 'WARD-12', roadType: 'Arterial' },
-  { name: 'Ward 18 - Near Victoria Apex Hospital (Medical Corridor)', lat: 12.9862, lng: 77.6142, wardId: 'WARD-18', roadType: 'Arterial' },
-  { name: 'Ward 24 - Ring Road Circle (Expressway Interchange)', lat: 12.9552, lng: 77.5802, wardId: 'WARD-24', roadType: 'Arterial' },
-  { name: 'Ward 12 - Quiet Residential Street (Sector 4)', lat: 12.9690, lng: 77.5880, wardId: 'WARD-12', roadType: 'Residential' },
+  { name: 'Ward 12 - Near Ajmeri Gate (MI Road Heritage Corridor)', lat: 26.9152, lng: 75.8152, wardId: 'WARD-12', roadType: 'Arterial' },
+  { name: 'Ward 18 - Near Amrapali Circle (Vaishali Nagar Hub)', lat: 26.9022, lng: 75.7402, wardId: 'WARD-18', roadType: 'Arterial' },
+  { name: 'Ward 24 - Near Fortis Hospital (JLN Marg Medical Belt)', lat: 26.8522, lng: 75.8122, wardId: 'WARD-24', roadType: 'Arterial' },
+  { name: 'Ward 24 - Gaurav Tower & World Trade Park Circle', lat: 26.8542, lng: 75.8052, wardId: 'WARD-24', roadType: 'Collector' },
 ];
 
 export const ReportPage: React.FC = () => {
@@ -24,8 +24,8 @@ export const ReportPage: React.FC = () => {
   const [description, setDescription] = useState<string>('Deep pothole near school entrance causing danger to two-wheelers.');
   const [roadType, setRoadType] = useState<string>('Arterial');
   const [wardId, setWardId] = useState<string>('WARD-12');
-  const [latitude, setLatitude] = useState<number>(12.9732);
-  const [longitude, setLongitude] = useState<number>(77.5942);
+  const [latitude, setLatitude] = useState<number>(26.9152);
+  const [longitude, setLongitude] = useState<number>(75.8152);
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
