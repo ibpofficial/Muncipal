@@ -2,21 +2,27 @@
   "name": "municipal-road-repair-prioritizer",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
   "scripts": {
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "npm --prefix server run build && npm --prefix client run build",
-    "prisma:generate": "npm --prefix server run prisma:generate",
-    "prisma:push": "npm --prefix server run prisma:push",
-    "prisma:seed": "npm --prefix server run prisma:seed",
-    "test": "npm --prefix server run test"
+    "prisma:generate": "prisma generate --schema=./prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema=./prisma/schema.prisma",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "prisma": "^5.22.0"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.0"
   }
 }
