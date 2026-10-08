@@ -8,6 +8,9 @@ import {
   PlusCircle,
   Truck,
   Building2,
+  BarChart3,
+  Flame,
+  Wrench,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -23,7 +26,7 @@ export const Sidebar: React.FC = () => {
       ],
     },
     {
-      title: 'OPERATIONS',
+      title: 'OPERATIONS & PLANNING',
       items: [
         {
           path: '/daily-plan',
@@ -37,11 +40,28 @@ export const Sidebar: React.FC = () => {
           label: 'Priority Queue',
           icon: ClipboardList,
         },
+        {
+          path: '/analytics',
+          label: 'Operational Analytics',
+          icon: BarChart3,
+        },
+        {
+          path: '/hotspots',
+          label: 'Recurring Hotspots',
+          icon: Flame,
+          badge: 'NEW',
+        },
       ],
     },
     {
-      title: 'FIELD & COMPLAINTS',
+      title: 'FIELD CREW & DISPATCH',
       items: [
+        {
+          path: '/field',
+          label: 'Field Crew Workspace',
+          icon: Wrench,
+          badge: 'MOBILE',
+        },
         {
           path: '/crews',
           label: 'Field Crews',
@@ -79,7 +99,7 @@ export const Sidebar: React.FC = () => {
                     className={({ isActive }) =>
                       `flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
                         isActive
-                          ? 'bg-navy-900 text-white shadow-md border-l-4 border-blue-400'
+                          ? 'bg-blue-900 text-white shadow-md border-l-4 border-blue-400'
                           : item.accent
                           ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
                           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -106,7 +126,7 @@ export const Sidebar: React.FC = () => {
         <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold text-slate-700 uppercase flex items-center">
-              <Building2 className="w-3.5 h-3.5 mr-1 text-navy-800" /> Active Zones
+              <Building2 className="w-3.5 h-3.5 mr-1 text-blue-800" /> Active Zones
             </span>
             <span className="text-[10px] font-mono text-slate-500 font-bold">3 Wards</span>
           </div>

@@ -7,14 +7,27 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model User {
+  id          String   @id @default(uuid())
+  firebaseUid String   @unique
+  name        String
+  email       String   @unique
+  role        String   @default("OFFICER") // OFFICER, SUPERVISOR, FIELD_CREW
+  crewId      String?
+  crew        Crew?    @relation(fields: [crewId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Ward {
-  id         String      @id
-  name       String
-  zone       String
-  population Int
-  areaKm2    Float
-  complaints Complaint[]
-  assets     RoadAsset[]
+  id          String        @id
+  name        String
+  zone        String
+  population  Int
+  areaKm2     Float
+  complaints  Complaint[]
+  assets      RoadAsset[]
+  hotspots    RoadHotspot[]
 }
 
 model Complaint {
@@ -28,7 +41,7 @@ model Complaint {
   ward         Ward       @relation(fields: [wardId], references: [id])
   roadType     String     // Residential, Local, Collector, Arterial
   reportedAt   DateTime   @default(now())
-  status       String     @default("PENDING") // PENDING, ASSIGNED, IN_PROGRESS, COMPLETED
+  status       String     @default("PENDING") // PENDING, ASSIGNED, SCHEDULED, IN_PROGRESS, COMPLETED
 
   workOrder    WorkOrder?
 }
@@ -55,7 +68,10 @@ model WorkOrder {
   estimatedDuration  Int        @default(90) // minutes
   assignedAt         DateTime?
   scheduledAt        DateTime?
-  completedAt        DateTime?
+  actualStartTime    DateTime?
+  actualCompletedTime DateTime?
+  actualDuration     Int?       // minutes
+  completionNotes    String?
   sequence           Int?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
@@ -63,6 +79,7 @@ model WorkOrder {
   planItems          PlanItem[]
   decisions          AssignmentDecision[]
   overrides          AssignmentOverride[]
+  evidencePhotos     PhotoEvidence[]
 }
 
 model Crew {
@@ -80,6 +97,7 @@ model Crew {
 
   workOrders         WorkOrder[]
   planItems          PlanItem[]
+  users              User[]
 }
 
 model RoadAsset {
@@ -136,4 +154,30 @@ model AssignmentOverride {
   newCrewId      String
   reason         String
   createdAt      DateTime  @default(now())
+}
+
+model PhotoEvidence {
+  id          String    @id @default(uuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  type        String    // COMPLAINT, BEFORE, AFTER
+  url         String
+  storagePath String?
+  uploadedBy  String?
+  createdAt   DateTime  @default(now())
+}
+
+model RoadHotspot {
+  id              String   @id @default(uuid())
+  name            String
+  latitude        Float
+  longitude       Float
+  radius          Float    @default(100.0) // in meters
+  complaintCount  Int      @default(3)
+  averageSeverity String   @default("HIGH")
+  highestPriority Float    @default(85)
+  wardId          String
+  ward            Ward     @relation(fields: [wardId], references: [id])
+  lastReportedAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
 }

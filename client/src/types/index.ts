@@ -2,6 +2,17 @@ export type PriorityBand = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type SeverityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type WorkOrderStatus = 'PENDING' | 'ASSIGNED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
 export type RoadType = 'Residential' | 'Local' | 'Collector' | 'Arterial';
+export type UserRole = 'OFFICER' | 'SUPERVISOR' | 'FIELD_CREW';
+
+export interface User {
+  id: string;
+  firebaseUid: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  crewId?: string | null;
+  crew?: Crew;
+}
 
 export interface Ward {
   id: string;
@@ -33,6 +44,16 @@ export interface Crew {
   workingEnd: string;
   dailyCapacity: number;
   todayAssignedJobs?: number;
+}
+
+export interface PhotoEvidence {
+  id: string;
+  workOrderId: string;
+  type: 'COMPLAINT' | 'BEFORE' | 'AFTER';
+  url: string;
+  storagePath?: string | null;
+  uploadedBy?: string | null;
+  createdAt: string;
 }
 
 export interface Complaint {
@@ -68,6 +89,10 @@ export interface WorkOrder {
   scheduledDate?: string;
   status: WorkOrderStatus;
   estimatedDuration: number;
+  actualStartTime?: string | null;
+  actualCompletedTime?: string | null;
+  actualDuration?: number | null;
+  completionNotes?: string | null;
   sequence?: number;
   factors: {
     severity: number;
@@ -79,6 +104,7 @@ export interface WorkOrder {
   reasons: string[];
   recommendation: string;
   complaint: Complaint;
+  evidencePhotos?: PhotoEvidence[];
   nearbyAssets?: { asset: RoadAsset; distanceMeters: number }[];
 }
 
@@ -97,6 +123,44 @@ export interface MapWorkOrder {
   fullWardName: string;
   status: WorkOrderStatus;
   reportedAt: string;
+}
+
+export interface RoadHotspot {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  complaintCount: number;
+  averageSeverity: string;
+  highestPriority: number;
+  wardId: string;
+  ward?: Ward;
+  lastReportedAt: string;
+  createdAt: string;
+}
+
+export interface FieldJob {
+  planItemId: string;
+  sequence: number;
+  scheduledStart: string;
+  estimatedDuration: number;
+  travelDistanceKm: number;
+  travelTimeMin: number;
+  workOrder: WorkOrder;
+}
+
+export interface FieldTodayResponse {
+  success: boolean;
+  data: {
+    crew: Crew;
+    date: string;
+    totalJobs: number;
+    completedJobs: number;
+    remainingJobs: number;
+    nextJob: FieldJob | null;
+    jobs: FieldJob[];
+  };
 }
 
 export interface DashboardKPIs {
@@ -185,4 +249,53 @@ export interface DailyPlanResponse {
     remainingQueue: UnscheduledItem[];
     planReasons: string[];
   };
+}
+
+export interface OperationalAnalyticsData {
+  summary: {
+    totalComplaints: number;
+    totalWorkOrders: number;
+    completedJobs: number;
+    pendingJobs: number;
+    scheduledJobs: number;
+    criticalCompleted: number;
+    avgEstimatedDuration: number;
+    avgActualDuration: number;
+    durationDifference: number;
+    totalTravelDistanceKm: number;
+    avgTravelDistanceKm: number;
+    hotspotCount: number;
+  };
+  insights: string[];
+}
+
+export interface CrewAnalyticsItem {
+  id: string;
+  name: string;
+  specialization: string;
+  members: number;
+  dailyCapacity: number;
+  jobsAssigned: number;
+  jobsCompleted: number;
+  jobsRemaining: number;
+  completionRate: number;
+  avgRepairDuration: number;
+  avgTravelKm: number;
+  capacityUtilization: number;
+}
+
+export interface WardAnalyticsItem {
+  id: string;
+  name: string;
+  zone: string;
+  population: number;
+  areaKm2: number;
+  totalComplaints: number;
+  criticalCount: number;
+  highCount: number;
+  completed: number;
+  pending: number;
+  avgPriority: number;
+  avgRepairTime: number;
+  hotspotCount: number;
 }
