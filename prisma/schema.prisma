@@ -1,0 +1,81 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Ward {
+  id         String      @id
+  name       String
+  zone       String
+  population Int
+  areaKm2    Float
+  complaints Complaint[]
+  assets     RoadAsset[]
+}
+
+model Complaint {
+  id           String     @id
+  ticketNumber String     @unique
+  description  String
+  photoUrl     String?
+  latitude     Float
+  longitude    Float
+  wardId       String
+  ward         Ward       @relation(fields: [wardId], references: [id])
+  roadType     String     // Residential, Local, Collector, Arterial
+  reportedAt   DateTime   @default(now())
+  status       String     @default("PENDING") // PENDING, ASSIGNED, IN_PROGRESS, COMPLETED
+
+  workOrder    WorkOrder?
+}
+
+model WorkOrder {
+  id                 String     @id
+  workOrderNumber    String     @unique
+  complaintId        String     @unique
+  complaint          Complaint  @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  severity           String     // CRITICAL, HIGH, MEDIUM, LOW
+  severityScore      Float
+  exposureScore      Float
+  trafficScore       Float
+  ageScore           Float
+  crewProximityScore Float
+  priorityScore      Float
+  priorityBand       String     // CRITICAL, HIGH, MEDIUM, LOW
+  assignedCrewId     String?
+  assignedCrew       Crew?      @relation(fields: [assignedCrewId], references: [id])
+  scheduledDate      DateTime?
+  status             String     @default("PENDING")
+  reasons            String     // JSON array of strings
+  recommendation     String     @default("Repair today")
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+}
+
+model Crew {
+  id               String      @id
+  name             String
+  members          Int
+  specialization   String
+  currentLatitude  Float
+  currentLongitude Float
+  availability     String      @default("AVAILABLE") // AVAILABLE, BUSY, OFF_DUTY
+  dailyCapacity    Int         @default(4)
+  assignedCount    Int         @default(0)
+  workOrders       WorkOrder[]
+}
+
+model RoadAsset {
+  id         String   @id
+  type       String   // SCHOOL, HOSPITAL, BUS_STOP, MARKET, INTERSECTION, PUBLIC_AREA
+  name       String
+  latitude   Float
+  longitude  Float
+  importance Float    // 0 to 100
+  wardId     String
+  ward       Ward     @relation(fields: [wardId], references: [id])
+}
