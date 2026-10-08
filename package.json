@@ -2,6 +2,7 @@
   "name": "municipal-road-repair-prioritizer",
   "version": "1.0.0",
   "private": true,
+  "main": "api/index.ts",
   "workspaces": [
     "server",
     "client"
