@@ -49,24 +49,37 @@ model WorkOrder {
   assignedCrewId     String?
   assignedCrew       Crew?      @relation(fields: [assignedCrewId], references: [id])
   scheduledDate      DateTime?
-  status             String     @default("PENDING")
+  status             String     @default("PENDING") // PENDING, ASSIGNED, SCHEDULED, IN_PROGRESS, COMPLETED
   reasons            String     // JSON array of strings
   recommendation     String     @default("Repair today")
+  estimatedDuration  Int        @default(90) // minutes
+  assignedAt         DateTime?
+  scheduledAt        DateTime?
+  completedAt        DateTime?
+  sequence           Int?
   createdAt          DateTime   @default(now())
   updatedAt          DateTime   @updatedAt
+
+  planItems          PlanItem[]
+  decisions          AssignmentDecision[]
+  overrides          AssignmentOverride[]
 }
 
 model Crew {
-  id               String      @id
-  name             String
-  members          Int
-  specialization   String
-  currentLatitude  Float
-  currentLongitude Float
-  availability     String      @default("AVAILABLE") // AVAILABLE, BUSY, OFF_DUTY
-  dailyCapacity    Int         @default(4)
-  assignedCount    Int         @default(0)
-  workOrders       WorkOrder[]
+  id                 String     @id
+  name               String
+  members            Int
+  specialization     String     // e.g. "Asphalt & surface repair", "General road maintenance"
+  currentLatitude    Float
+  currentLongitude   Float
+  availabilityStatus String     @default("AVAILABLE") // AVAILABLE, BUSY, OFFLINE, ON_BREAK, FULL
+  workingStart       String     @default("08:30")
+  workingEnd         String     @default("17:00")
+  dailyCapacity      Int        @default(4)
+  assignedCount      Int        @default(0)
+
+  workOrders         WorkOrder[]
+  planItems          PlanItem[]
 }
 
 model RoadAsset {
@@ -78,4 +91,49 @@ model RoadAsset {
   importance Float    // 0 to 100
   wardId     String
   ward       Ward     @relation(fields: [wardId], references: [id])
+}
+
+model DailyPlan {
+  id          String     @id
+  date        String     // YYYY-MM-DD
+  status      String     @default("GENERATED") // GENERATED, APPROVED, COMPLETED
+  generatedAt DateTime   @default(now())
+  items       PlanItem[]
+}
+
+model PlanItem {
+  id                String    @id
+  dailyPlanId       String
+  dailyPlan         DailyPlan @relation(fields: [dailyPlanId], references: [id], onDelete: Cascade)
+  workOrderId       String
+  workOrder         WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  crewId            String
+  crew              Crew      @relation(fields: [crewId], references: [id])
+  sequence          Int
+  scheduledStart    String    // e.g. "09:00"
+  estimatedDuration Int       // in minutes
+  travelDistanceKm  Float
+  travelTimeMin     Int
+  reason            String
+}
+
+model AssignmentDecision {
+  id          String    @id @default(uuid())
+  workOrderId String
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  crewId      String
+  score       Float
+  recommended Boolean   @default(true)
+  reason      String
+  createdAt   DateTime  @default(now())
+}
+
+model AssignmentOverride {
+  id             String    @id @default(uuid())
+  workOrderId    String
+  workOrder      WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  previousCrewId String?
+  newCrewId      String
+  reason         String
+  createdAt      DateTime  @default(now())
 }

@@ -1,6 +1,6 @@
 export type PriorityBand = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type SeverityLevel = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type WorkOrderStatus = 'PENDING' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED';
+export type WorkOrderStatus = 'PENDING' | 'ASSIGNED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED';
 export type RoadType = 'Residential' | 'Local' | 'Collector' | 'Arterial';
 
 export interface Ward {
@@ -28,9 +28,11 @@ export interface Crew {
   specialization: string;
   currentLatitude: number;
   currentLongitude: number;
-  availability: 'AVAILABLE' | 'BUSY' | 'OFF_DUTY';
+  availabilityStatus: 'AVAILABLE' | 'BUSY' | 'OFFLINE' | 'ON_BREAK' | 'FULL';
+  workingStart: string;
+  workingEnd: string;
   dailyCapacity: number;
-  todayAssignedJobs: number;
+  todayAssignedJobs?: number;
 }
 
 export interface Complaint {
@@ -65,6 +67,8 @@ export interface WorkOrder {
   assignedCrew?: Crew;
   scheduledDate?: string;
   status: WorkOrderStatus;
+  estimatedDuration: number;
+  sequence?: number;
   factors: {
     severity: number;
     exposure: number;
@@ -112,5 +116,73 @@ export interface DashboardSummaryResponse {
     byPriority: { name: string; count: number; color: string }[];
     byWard: { wardId: string; wardName: string; fullTitle: string; count: number }[];
     byStatus: { name: string; count: number }[];
+  };
+}
+
+export interface ScheduledJobItem {
+  workOrderId: string;
+  workOrderNumber: string;
+  sequence: number;
+  scheduledStart: string;
+  scheduledEnd: string;
+  estimatedDuration: number;
+  travelDistanceKm: number;
+  travelTimeMin: number;
+  priorityScore: number;
+  priorityBand: PriorityBand;
+  severity: SeverityLevel;
+  roadType: string;
+  description: string;
+  wardName: string;
+  latitude: number;
+  longitude: number;
+  suitabilityScore: number;
+  reason: string;
+}
+
+export interface CrewPlan {
+  crewId: string;
+  crewName: string;
+  specialization: string;
+  availabilityStatus: string;
+  currentLatitude: number;
+  currentLongitude: number;
+  dailyCapacity: number;
+  assignedCount: number;
+  capacityUtilizationPercent: number;
+  totalTravelDistanceKm: number;
+  totalTravelTimeMin: number;
+  totalWorkTimeMin: number;
+  totalFieldTimeFormatted: string;
+  jobs: ScheduledJobItem[];
+}
+
+export interface UnscheduledItem {
+  workOrderId: string;
+  workOrderNumber: string;
+  priorityScore: number;
+  priorityBand: PriorityBand;
+  description: string;
+  roadType: string;
+  wardName: string;
+  reason: string;
+}
+
+export interface DailyPlanResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    date: string;
+    summary: {
+      totalJobsPlanned: number;
+      crewsUsed: number;
+      totalTravelKm: number;
+      totalFieldTimeFormatted: string;
+      capacityUtilizationPercent: number;
+      unscheduledCount: number;
+    };
+    crewPlans: CrewPlan[];
+    remainingQueue: UnscheduledItem[];
+    planReasons: string[];
   };
 }

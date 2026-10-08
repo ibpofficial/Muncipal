@@ -4,6 +4,12 @@ import { getComplaints, getComplaintById, createComplaint } from '../controllers
 import { getWorkOrders, getWorkOrderById, recalculatePriority } from '../controllers/workOrderController';
 import { getCrews } from '../controllers/crewController';
 import { getMapWorkOrders } from '../controllers/mapController';
+import {
+  getDailyPlan,
+  generateAndSaveDailyPlan,
+  assignWorkOrderManual,
+  updateWorkOrderStatus,
+} from '../controllers/dailyPlanController';
 
 const router = Router();
 
@@ -19,6 +25,12 @@ router.post('/complaints', createComplaint);
 router.get('/work-orders', getWorkOrders);
 router.get('/work-orders/:id', getWorkOrderById);
 router.post('/work-orders/:id/calculate-priority', recalculatePriority);
+router.post('/work-orders/:id/assign', assignWorkOrderManual);
+router.patch('/work-orders/:id/status', updateWorkOrderStatus);
+
+// Daily Plan REST endpoints
+router.get('/daily-plan', getDailyPlan);
+router.post('/daily-plan/generate', generateAndSaveDailyPlan);
 
 // Crews REST endpoints
 router.get('/crews', getCrews);

@@ -1,11 +1,10 @@
 import React from 'react';
-import { MapContainer as LeafletMap, TileLayer, Marker, Popup, CircleMarker } from 'react-leaflet';
+import { MapContainer as LeafletMap, TileLayer, CircleMarker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
-import { MapWorkOrder, RoadAsset, Crew } from '../types';
+import { MapWorkOrder, RoadAsset, Crew, ScheduledJobItem } from '../types';
 import { PriorityBadge } from './PriorityBadge';
-import { MapPin, Navigation, Eye } from 'lucide-react';
+import { MapPin, Eye } from 'lucide-react';
 
-// Fix default leaflet icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -17,6 +16,7 @@ interface MapContainerProps {
   workOrders: MapWorkOrder[];
   assets?: RoadAsset[];
   crews?: Crew[];
+  routeJobs?: ScheduledJobItem[];
   selectedWorkOrderId?: string | null;
   onSelectWorkOrder?: (workOrderId: string) => void;
   center?: [number, number];
@@ -27,6 +27,7 @@ export const CommandMap: React.FC<MapContainerProps> = ({
   workOrders,
   assets = [],
   crews = [],
+  routeJobs = [],
   selectedWorkOrderId,
   onSelectWorkOrder,
   center = [12.9716, 77.5946],
@@ -35,113 +36,152 @@ export const CommandMap: React.FC<MapContainerProps> = ({
   const getMarkerColor = (band: string) => {
     switch (band) {
       case 'CRITICAL':
-        return '#EF4444';
+        return '#DC2626';
       case 'HIGH':
-        return '#F97316';
+        return '#EA580C';
       case 'MEDIUM':
-        return '#EAB308';
+        return '#D97706';
       case 'LOW':
-        return '#22C55E';
+        return '#059669';
       default:
-        return '#3B82F6';
+        return '#2563EB';
     }
   };
 
+  // Route Polyline Coordinates if routeJobs provided
+  const routePolylineCoords: [number, number][] = routeJobs.map((j) => [j.latitude, j.longitude]);
+
   return (
-    <div className="w-full h-full relative rounded-lg border border-[#262D38] overflow-hidden shadow-inner">
+    <div className="w-full h-full relative rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       <LeafletMap
         center={center}
         zoom={zoom}
         scrollWheelZoom={true}
         style={{ width: '100%', height: '100%' }}
       >
-        {/* CartoDB Dark Matter Tiles */}
+        {/* CartoDB Positron Light Tiles */}
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
-        {/* Work Order Location Circle Markers */}
-        {workOrders.map((wo) => {
-          const color = getMarkerColor(wo.priorityBand);
-          const isSelected = selectedWorkOrderId === wo.workOrderId;
+        {/* Route Line if Route Sequence active */}
+        {routePolylineCoords.length > 1 && (
+          <Polyline
+            positions={routePolylineCoords}
+            pathOptions={{ color: '#1D4ED8', weight: 4, dashArray: '6, 8', opacity: 0.8 }}
+          />
+        )}
 
-          return (
-            <CircleMarker
-              key={wo.workOrderId}
-              center={[wo.latitude, wo.longitude]}
-              radius={isSelected ? 10 : 7}
-              pathOptions={{
-                fillColor: color,
-                fillOpacity: isSelected ? 0.95 : 0.8,
-                color: isSelected ? '#FFFFFF' : color,
-                weight: isSelected ? 3 : 1.5,
-              }}
-              eventHandlers={{
-                click: () => onSelectWorkOrder && onSelectWorkOrder(wo.workOrderId),
-              }}
-            >
-              <Popup>
-                <div className="p-1 space-y-2 min-w-[200px]">
-                  <div className="flex items-center justify-between border-b border-[#262D38] pb-1.5">
-                    <span className="font-mono text-xs font-bold text-[#F8FAFC]">
-                      {wo.workOrderId}
-                    </span>
-                    <PriorityBadge band={wo.priorityBand} size="sm" />
-                  </div>
-
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center justify-between text-[#A8B0BE]">
-                      <span>Priority Score:</span>
-                      <span className="font-mono font-bold text-[#F5B800] text-sm">
-                        {wo.priorityScore} / 100
-                      </span>
-                    </div>
-
-                    <div className="flex items-center text-[#6B7280]">
-                      <MapPin className="w-3 h-3 mr-1 text-[#F5B800] shrink-0" />
-                      <span className="truncate">{wo.fullWardName}</span>
-                    </div>
-
-                    <p className="text-[11px] text-[#A8B0BE] line-clamp-2 italic pt-1 border-t border-[#262D38]/50">
-                      "{wo.description}"
-                    </p>
-                  </div>
-
-                  {onSelectWorkOrder && (
-                    <button
-                      onClick={() => onSelectWorkOrder(wo.workOrderId)}
-                      className="w-full mt-2 py-1.5 bg-[#F5B800] hover:bg-[#E0A700] text-[#090B10] font-mono text-xs font-bold rounded flex items-center justify-center space-x-1 transition-colors"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View Decision Details</span>
-                    </button>
-                  )}
+        {/* Route Sequence Numbered Stop Markers */}
+        {routeJobs.map((job) => (
+          <CircleMarker
+            key={`route-${job.workOrderId}`}
+            center={[job.latitude, job.longitude]}
+            radius={12}
+            pathOptions={{
+              fillColor: '#1E3A8A',
+              fillOpacity: 0.95,
+              color: '#FFFFFF',
+              weight: 2,
+            }}
+          >
+            <Popup>
+              <div className="p-1 space-y-1.5 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                  <span className="font-bold text-blue-700">STOP #{job.sequence}</span>
+                  <PriorityBadge band={job.priorityBand} size="sm" />
                 </div>
-              </Popup>
-            </CircleMarker>
-          );
-        })}
+                <div className="text-slate-900 font-bold">{job.workOrderNumber}</div>
+                <div className="text-slate-600 text-[11px]">{job.scheduledStart} - {job.scheduledEnd}</div>
+                <div className="text-slate-500 line-clamp-1 italic">{job.description}</div>
+              </div>
+            </Popup>
+          </CircleMarker>
+        ))}
 
-        {/* Road Asset Markers (Schools, Hospitals, Bus Stops) */}
+        {/* Work Order Location Circle Markers */}
+        {routeJobs.length === 0 &&
+          workOrders.map((wo) => {
+            const color = getMarkerColor(wo.priorityBand);
+            const isSelected = selectedWorkOrderId === wo.workOrderId;
+
+            return (
+              <CircleMarker
+                key={wo.workOrderId}
+                center={[wo.latitude, wo.longitude]}
+                radius={isSelected ? 10 : 7}
+                pathOptions={{
+                  fillColor: color,
+                  fillOpacity: isSelected ? 0.95 : 0.85,
+                  color: isSelected ? '#FFFFFF' : color,
+                  weight: isSelected ? 3 : 1.5,
+                }}
+                eventHandlers={{
+                  click: () => onSelectWorkOrder && onSelectWorkOrder(wo.workOrderId),
+                }}
+              >
+                <Popup>
+                  <div className="p-1 space-y-2 min-w-[200px]">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                      <span className="font-mono text-xs font-bold text-slate-900">
+                        {wo.workOrderId}
+                      </span>
+                      <PriorityBadge band={wo.priorityBand} size="sm" />
+                    </div>
+
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center justify-between text-slate-600 font-mono">
+                        <span>Priority Score:</span>
+                        <span className="font-bold text-blue-700 text-sm">
+                          {wo.priorityScore} / 100
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-slate-500 text-[11px]">
+                        <MapPin className="w-3 h-3 mr-1 text-blue-600 shrink-0" />
+                        <span className="truncate">{wo.fullWardName}</span>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 line-clamp-2 italic pt-1 border-t border-slate-100">
+                        "{wo.description}"
+                      </p>
+                    </div>
+
+                    {onSelectWorkOrder && (
+                      <button
+                        onClick={() => onSelectWorkOrder(wo.workOrderId)}
+                        className="w-full mt-2 py-1.5 bg-navy-900 hover:bg-navy-800 text-white font-mono text-xs font-bold rounded-md flex items-center justify-center space-x-1 transition-colors shadow-sm"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Decision Details</span>
+                      </button>
+                    )}
+                  </div>
+                </Popup>
+              </CircleMarker>
+            );
+          })}
+
+        {/* Road Asset Markers */}
         {assets.map((asset) => (
           <CircleMarker
             key={asset.id}
             center={[asset.latitude, asset.longitude]}
             radius={4}
             pathOptions={{
-              fillColor: '#3B82F6',
+              fillColor: '#2563EB',
               fillOpacity: 0.6,
-              color: '#60A5FA',
+              color: '#1D4ED8',
               weight: 1,
             }}
           >
             <Popup>
-              <div className="text-xs p-1">
-                <span className="font-mono font-semibold text-[#60A5FA] block">
+              <div className="text-xs p-1 font-mono">
+                <span className="font-bold text-blue-700 block">
                   [{asset.type}] {asset.name}
                 </span>
-                <span className="text-[10px] text-[#A8B0BE]">Asset Importance: {asset.importance} / 100</span>
+                <span className="text-[10px] text-slate-500">Asset Importance: {asset.importance} / 100</span>
               </div>
             </Popup>
           </CircleMarker>

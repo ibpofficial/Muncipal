@@ -5,6 +5,7 @@ import {
   Crew,
   MapWorkOrder,
   RoadAsset,
+  DailyPlanResponse,
 } from '../types';
 
 const API_BASE = '/api';
@@ -95,4 +96,42 @@ export async function fetchMapWorkOrders(): Promise<{
     assets: json.assets,
     crews: json.crews,
   };
+}
+
+export async function fetchDailyPlan(): Promise<DailyPlanResponse> {
+  const res = await fetch(`${API_BASE}/daily-plan`);
+  if (!res.ok) throw new Error('Failed to fetch daily work plan');
+  return res.json();
+}
+
+export async function generateDailyPlanApi(): Promise<DailyPlanResponse> {
+  const res = await fetch(`${API_BASE}/daily-plan/generate`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to generate daily plan');
+  return res.json();
+}
+
+export async function assignWorkOrderManualApi(
+  id: string,
+  crewId: string,
+  overrideReason?: string
+) {
+  const res = await fetch(`${API_BASE}/work-orders/${id}/assign`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ crewId, overrideReason }),
+  });
+  if (!res.ok) throw new Error('Failed to assign work order');
+  return res.json();
+}
+
+export async function updateWorkOrderStatusApi(id: string, status: string) {
+  const res = await fetch(`${API_BASE}/work-orders/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) throw new Error('Failed to update status');
+  return res.json();
 }

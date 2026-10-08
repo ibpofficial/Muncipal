@@ -2,119 +2,140 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  CalendarCheck,
   ClipboardList,
   FileText,
   PlusCircle,
   Truck,
   Building2,
-  MapPin,
-  HelpCircle,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-  const navItems = [
+  const navSections = [
     {
-      path: '/dashboard',
-      label: 'Command Center',
-      icon: LayoutDashboard,
-      badge: 'LIVE',
+      title: 'COMMAND CENTER',
+      items: [
+        {
+          path: '/dashboard',
+          label: 'Command Center',
+          icon: LayoutDashboard,
+        },
+      ],
     },
     {
-      path: '/work-orders',
-      label: 'Work Orders Queue',
-      icon: ClipboardList,
+      title: 'OPERATIONS',
+      items: [
+        {
+          path: '/daily-plan',
+          label: 'Daily Work Plan',
+          icon: CalendarCheck,
+          badge: 'PLANNER',
+          accent: true,
+        },
+        {
+          path: '/work-orders',
+          label: 'Priority Queue',
+          icon: ClipboardList,
+        },
+      ],
     },
     {
-      path: '/complaints',
-      label: 'Citizen Complaints',
-      icon: FileText,
-    },
-    {
-      path: '/report',
-      label: 'Report Road Issue',
-      icon: PlusCircle,
-      accent: true,
-    },
-    {
-      path: '/crews',
-      label: 'Repair Crews',
-      icon: Truck,
+      title: 'FIELD & COMPLAINTS',
+      items: [
+        {
+          path: '/crews',
+          label: 'Field Crews',
+          icon: Truck,
+        },
+        {
+          path: '/complaints',
+          label: 'Citizen Complaints',
+          icon: FileText,
+        },
+        {
+          path: '/report',
+          label: 'Report Road Issue',
+          icon: PlusCircle,
+        },
+      ],
     },
   ];
 
   return (
-    <aside className="w-64 bg-[#0D1117] border-r border-[#262D38] flex flex-col justify-between shrink-0 min-h-[calc(100vh-61px)]">
+    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between shrink-0 min-h-[calc(100vh-61px)] shadow-sm">
       <div className="p-4 space-y-6">
-        <div>
-          <span className="text-[10px] font-mono tracking-widest text-[#6B7280] uppercase px-3">
-            OPERATIONS NAVIGATION
-          </span>
-          <nav className="mt-2 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2.5 rounded-md text-xs font-medium transition-all duration-150 ${
-                      isActive
-                        ? 'bg-[#11151D] text-[#F5B800] border-l-2 border-[#F5B800] shadow-sm'
-                        : item.accent
-                        ? 'text-[#F5B800] hover:bg-[#11151D]/60 hover:text-[#F5B800]'
-                        : 'text-[#A8B0BE] hover:bg-[#11151D] hover:text-[#F8FAFC]'
-                    }`
-                  }
-                >
-                  <div className="flex items-center space-x-3">
-                    <Icon className="w-4 h-4 shrink-0" />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge && (
-                    <span className="px-1.5 py-0.5 text-[9px] font-mono bg-[#F5B800]/20 text-[#F5B800] border border-[#F5B800]/40 rounded font-bold">
-                      {item.badge}
-                    </span>
-                  )}
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Demographics / Ward Quick Reference */}
-        <div className="p-3 bg-[#11151D] rounded-md border border-[#262D38] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-mono font-semibold text-[#A8B0BE] uppercase flex items-center">
-              <Building2 className="w-3 h-3 mr-1 text-[#F5B800]" /> Active Wards
+        {navSections.map((section, idx) => (
+          <div key={idx}>
+            <span className="text-[10px] font-mono tracking-widest text-slate-400 uppercase px-3 font-semibold">
+              {section.title}
             </span>
-            <span className="text-[10px] font-mono text-[#6B7280]">3 Zones</span>
+            <nav className="mt-2 space-y-1">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                        isActive
+                          ? 'bg-navy-900 text-white shadow-md border-l-4 border-blue-400'
+                          : item.accent
+                          ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      }`
+                    }
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon className="w-4 h-4 shrink-0" />
+                      <span>{item.label}</span>
+                    </div>
+                    {item.badge && (
+                      <span className="px-1.5 py-0.5 text-[9px] font-mono bg-blue-600 text-white rounded font-bold uppercase">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
           </div>
-          <div className="space-y-1 text-[11px] font-mono text-[#A8B0BE]">
-            <div className="flex justify-between border-b border-[#262D38]/50 pb-1">
+        ))}
+
+        {/* Active Wards Quick Reference */}
+        <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono font-bold text-slate-700 uppercase flex items-center">
+              <Building2 className="w-3.5 h-3.5 mr-1 text-navy-800" /> Active Zones
+            </span>
+            <span className="text-[10px] font-mono text-slate-500 font-bold">3 Wards</span>
+          </div>
+          <div className="space-y-1 text-[11px] font-mono text-slate-600">
+            <div className="flex justify-between border-b border-slate-200 pb-1">
               <span>Ward 12 (North)</span>
-              <span className="text-emerald-400">18 Incidents</span>
+              <span className="font-bold text-blue-700">18 Jobs</span>
             </div>
-            <div className="flex justify-between border-b border-[#262D38]/50 pb-1">
+            <div className="flex justify-between border-b border-slate-200 pb-1">
               <span>Ward 18 (East)</span>
-              <span className="text-emerald-400">17 Incidents</span>
+              <span className="font-bold text-blue-700">17 Jobs</span>
             </div>
             <div className="flex justify-between">
               <span>Ward 24 (South)</span>
-              <span className="text-emerald-400">15 Incidents</span>
+              <span className="font-bold text-blue-700">15 Jobs</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer Info */}
-      <div className="p-4 border-t border-[#262D38] text-[11px] text-[#6B7280] space-y-2">
-        <div className="flex items-center justify-between text-mono">
-          <span>Engine Model:</span>
-          <span className="text-[#F8FAFC]">Rule-Based v1.0</span>
+      <div className="p-4 border-t border-slate-200 text-[11px] text-slate-500 space-y-1 bg-slate-50/50 font-mono">
+        <div className="flex items-center justify-between">
+          <span>Priority Model:</span>
+          <span className="text-slate-900 font-bold">40S+25E+20T+10A+5C</span>
         </div>
-        <div className="flex items-center justify-between text-mono">
-          <span>Formula:</span>
-          <span className="text-[#F5B800]">40S+25E+20T+10A+5C</span>
+        <div className="flex items-center justify-between">
+          <span>Crew Engine:</span>
+          <span className="text-blue-700 font-bold">Greedy Suitability</span>
         </div>
       </div>
     </aside>

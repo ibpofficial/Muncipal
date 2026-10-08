@@ -7,30 +7,26 @@ interface PriorityBadgeProps {
 }
 
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ band, size = 'md' }) => {
-  const bandStyles: Record<PriorityBand, { bg: string; text: string; border: string; glow: string }> = {
+  const bandStyles: Record<PriorityBand, { bg: string; text: string; border: string }> = {
     CRITICAL: {
-      bg: 'bg-red-950/70',
-      text: 'text-red-400',
-      border: 'border-red-600/60',
-      glow: 'shadow-[0_0_10px_rgba(239,68,68,0.25)]',
+      bg: 'bg-red-100',
+      text: 'text-red-700',
+      border: 'border-red-300',
     },
     HIGH: {
-      bg: 'bg-orange-950/70',
-      text: 'text-orange-400',
-      border: 'border-orange-600/60',
-      glow: 'shadow-[0_0_10px_rgba(249,115,22,0.25)]',
+      bg: 'bg-orange-100',
+      text: 'text-orange-700',
+      border: 'border-orange-300',
     },
     MEDIUM: {
-      bg: 'bg-yellow-950/70',
-      text: 'text-yellow-400',
-      border: 'border-yellow-600/60',
-      glow: 'shadow-[0_0_10px_rgba(234,179,8,0.25)]',
+      bg: 'bg-amber-100',
+      text: 'text-amber-800',
+      border: 'border-amber-300',
     },
     LOW: {
-      bg: 'bg-emerald-950/70',
-      text: 'text-emerald-400',
-      border: 'border-emerald-600/60',
-      glow: 'shadow-[0_0_10px_rgba(34,197,94,0.25)]',
+      bg: 'bg-emerald-100',
+      text: 'text-emerald-700',
+      border: 'border-emerald-300',
     },
   };
 
@@ -44,9 +40,9 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ band, size = 'md' 
 
   return (
     <span
-      className={`inline-flex items-center justify-center rounded border font-semibold uppercase ${style.bg} ${style.text} ${style.border} ${style.glow} ${sizeClasses[size]}`}
+      className={`inline-flex items-center justify-center rounded-md border font-semibold uppercase shadow-sm ${style.bg} ${style.text} ${style.border} ${sizeClasses[size]}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full mr-1.5 animate-pulse-subtle bg-current" />
+      <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-current" />
       {band}
     </span>
   );
