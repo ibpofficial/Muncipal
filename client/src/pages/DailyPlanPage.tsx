@@ -112,9 +112,8 @@ export const DailyPlanPage: React.FC = () => {
           <button
             onClick={handleGeneratePlan}
             disabled={generating}
-            className="px-4 py-2 bg-navy-900 hover:bg-navy-800 text-white font-mono text-xs font-bold rounded-lg flex items-center space-x-2 transition-all shadow-md disabled:opacity-50"
+            className="uiverse-slide-btn shadow-md disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
             <span>{generating ? 'GENERATING PLAN...' : 'GENERATE PLAN'}</span>
           </button>
         </div>

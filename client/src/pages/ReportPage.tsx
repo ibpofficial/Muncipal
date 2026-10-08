@@ -194,9 +194,8 @@ export const ReportPage: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-navy-900 hover:bg-navy-800 text-white font-mono font-bold text-sm uppercase rounded-lg flex items-center justify-center space-x-2 transition-all shadow-md disabled:opacity-50"
+            className="uiverse-slide-btn w-full shadow-md disabled:opacity-50"
           >
-            <Sparkles className="w-4 h-4 text-blue-300" />
             <span>{submitting ? 'CALCULATING PRIORITY SCORE...' : 'SUBMIT COMPLAINT & RUN DECISION ENGINE'}</span>
           </button>
         </div>

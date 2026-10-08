@@ -59,10 +59,10 @@ export const CommandMap: React.FC<MapContainerProps> = ({
         scrollWheelZoom={true}
         style={{ width: '100%', height: '100%' }}
       >
-        {/* CartoDB Positron Light Tiles */}
+        {/* Standard OpenStreetMap Tiles (No API key required) */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         {/* Route Line if Route Sequence active */}

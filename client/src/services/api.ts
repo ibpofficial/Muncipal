@@ -82,6 +82,24 @@ export async function createComplaintApi(payload: {
   return res.json();
 }
 
+export async function upvoteComplaintApi(id: string) {
+  const res = await fetch(`${API_BASE}/complaints/${id}/upvote`, {
+    method: 'POST',
+  });
+  if (!res.ok) throw new Error('Failed to upvote complaint');
+  return res.json();
+}
+
+export async function addCommentApi(id: string, text: string, authorName: string = 'Citizen') {
+  const res = await fetch(`${API_BASE}/complaints/${id}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, authorName }),
+  });
+  if (!res.ok) throw new Error('Failed to add comment');
+  return res.json();
+}
+
 export async function fetchCrews(): Promise<Crew[]> {
   const res = await fetch(`${API_BASE}/crews`);
   if (!res.ok) throw new Error('Failed to fetch crews');

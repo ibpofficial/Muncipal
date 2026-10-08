@@ -56,6 +56,14 @@ export interface PhotoEvidence {
   createdAt: string;
 }
 
+export interface Comment {
+  id: string;
+  complaintId: string;
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface Complaint {
   id: string;
   ticketNumber: string;
@@ -65,10 +73,12 @@ export interface Complaint {
   longitude: number;
   wardId: string;
   roadType: RoadType;
+  upvoteCount?: number;
   reportedAt: string;
   status: WorkOrderStatus;
   ward?: Ward;
   workOrder?: WorkOrder;
+  comments?: Comment[];
 }
 
 export interface WorkOrder {

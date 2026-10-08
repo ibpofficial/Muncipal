@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDashboardSummary } from '../controllers/dashboardController';
-import { getComplaints, getComplaintById, createComplaint } from '../controllers/complaintController';
+import { getComplaints, getComplaintById, createComplaint, upvoteComplaint, addComment } from '../controllers/complaintController';
 import { getWorkOrders, getWorkOrderById, recalculatePriority } from '../controllers/workOrderController';
 import { getCrews } from '../controllers/crewController';
 import { getMapWorkOrders } from '../controllers/mapController';
@@ -43,6 +43,8 @@ router.get('/dashboard/summary', getDashboardSummary);
 router.get('/complaints', getComplaints);
 router.get('/complaints/:id', getComplaintById);
 router.post('/complaints', createComplaint);
+router.post('/complaints/:id/upvote', upvoteComplaint);
+router.post('/complaints/:id/comments', addComment);
 
 // Work Orders REST Endpoints
 router.get('/work-orders', getWorkOrders);

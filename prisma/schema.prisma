@@ -40,10 +40,21 @@ model Complaint {
   wardId       String
   ward         Ward       @relation(fields: [wardId], references: [id])
   roadType     String     // Residential, Local, Collector, Arterial
+  upvoteCount  Int        @default(0)
   reportedAt   DateTime   @default(now())
   status       String     @default("PENDING") // PENDING, ASSIGNED, SCHEDULED, IN_PROGRESS, COMPLETED
 
   workOrder    WorkOrder?
+  comments     Comment[]
+}
+
+model Comment {
+  id          String    @id @default(uuid())
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  authorName  String    @default("Citizen")
+  text        String
+  createdAt   DateTime  @default(now())
 }
 
 model WorkOrder {

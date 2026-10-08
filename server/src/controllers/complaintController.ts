@@ -24,10 +24,11 @@ export async function getComplaints(req: Request, res: Response) {
       whereClause.workOrder = { priorityBand: priorityBand };
     }
 
-    const complaints = await prisma.complaint.findMany({
+    const complaints = await (prisma as any).complaint.findMany({
       where: whereClause,
       include: {
         ward: true,
+        comments: { orderBy: { createdAt: 'asc' } },
         workOrder: {
           include: {
             assignedCrew: true,
@@ -49,10 +50,11 @@ export async function getComplaints(req: Request, res: Response) {
 export async function getComplaintById(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const complaint = await prisma.complaint.findUnique({
+    const complaint = await (prisma as any).complaint.findUnique({
       where: { id },
       include: {
         ward: true,
+        comments: { orderBy: { createdAt: 'asc' } },
         workOrder: {
           include: {
             assignedCrew: true,
@@ -174,3 +176,96 @@ export async function createComplaint(req: Request, res: Response) {
     res.status(500).json({ success: false, message: 'Failed to create complaint' });
   }
 }
+
+export async function upvoteComplaint(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    const complaint: any = await (prisma as any).complaint.findFirst({
+      where: { OR: [{ id }, { ticketNumber: id }] },
+      include: { workOrder: true, ward: true },
+    });
+
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found' });
+    }
+
+    const updatedComplaint = await (prisma as any).complaint.update({
+      where: { id: complaint.id },
+      data: {
+        upvoteCount: (complaint.upvoteCount || 0) + 1,
+      },
+      include: { ward: true, workOrder: true },
+    });
+
+    let updatedWorkOrder = complaint.workOrder;
+
+    if (complaint.workOrder) {
+      // Calculate upvote priority boost: +2 points per upvote, capped at +20
+      const currentCount = updatedComplaint.upvoteCount;
+      const boost = Math.min(20, currentCount * 2);
+      
+      const newScore = Math.min(100, Math.round(complaint.workOrder.priorityScore + boost));
+      let newBand = 'LOW';
+      if (newScore >= 80) newBand = 'CRITICAL';
+      else if (newScore >= 60) newBand = 'HIGH';
+      else if (newScore >= 40) newBand = 'MEDIUM';
+
+      updatedWorkOrder = await (prisma as any).workOrder.update({
+        where: { id: complaint.workOrder.id },
+        data: {
+          priorityScore: newScore,
+          priorityBand: newBand,
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Upvoted complaint ${complaint.ticketNumber}! Priority boosted.`,
+      complaint: updatedComplaint,
+      workOrder: updatedWorkOrder,
+    });
+  } catch (error) {
+    console.error('Error upvoting complaint:', error);
+    res.status(500).json({ success: false, message: 'Failed to upvote complaint' });
+  }
+}
+
+export async function addComment(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+    const { authorName, text } = req.body;
+
+    if (!text || !text.trim()) {
+      return res.status(400).json({ success: false, message: 'Comment text is required' });
+    }
+
+    const complaint = await (prisma as any).complaint.findFirst({
+      where: { OR: [{ id }, { ticketNumber: id }] },
+    });
+
+    if (!complaint) {
+      return res.status(404).json({ success: false, message: 'Complaint not found' });
+    }
+
+    const comment = await (prisma as any).comment.create({
+      data: {
+        complaintId: complaint.id,
+        authorName: authorName || 'Citizen',
+        text: text.trim(),
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Comment added successfully',
+      comment,
+    });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ success: false, message: 'Failed to add comment' });
+  }
+}
+
+
